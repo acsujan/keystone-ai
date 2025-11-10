@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How It Works - Keystone AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="page-body">
+    <!-- Custom Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Video background -->
+    <video id="hero-video" autoplay loop muted playsinline preload="auto">
+        <source src="images/feature-video.mp4" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+
+    <!-- Header (starts transparent) -->
+    <header class="main-header">
+        <div class="container">
+            <a href="index.html"><img src="images/logo.svg" alt="Keystone AI Logo" class="logo"></a>
+            <nav>
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="how-it-works.html" class="nav-link active">How It Works</a>
+                <a href="pricing.html" class="nav-link">Pricing</a>
+                <a href="demo.html" class="btn btn-primary">Join the Queue</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <!-- This "page-panel" wrapper gives the glass effect -->
+        <div class="page-panel">
+            <section class="how-it-works-hero">
+                <h1>From Vision to Design in Minutes</h1>
+                <p>Our process is designed to be simple, intuitive, and powerful.</p>
+            </section>
+
+            <section class="steps-section">
+                <div class="step-item">
+                    <div id="lottie-share" class="lottie-icon"></div>
+                    <h2>Step 1: Share Your Link</h2>
+                    <p>Generate a unique, secure link from your dashboard and send it to your prospective client. There's no software for them to install.</p>
+                </div>
+                <div class="step-item">
+                    <div id="lottie-ai" class="lottie-icon"></div>
+                    <h2>Step 2: AI-Powered Visioning</h2>
+                    <p>Your client is guided through an intuitive interface to describe their project. Our AI, trained on your style, generates plans and models in real-time.</p>
+                </div>
+                <div class="step-item">
+                    <div id="lottie-design" class="lottie-icon"></div>
+                    <h2>Step 3: Begin Billable Work</h2>
+                    <p>Your first meeting starts with a solid foundation. You review the AI-generated designs with your client and begin the expert refinement process immediately.</p>
+                </div>
+            </section>
+            
+            <section class="final-cta">
+                <h2>Ready to Transform Your Workflow?</h2>
+                <a href="demo.html" class="btn btn-primary btn-large">Join the Queue</a>
+            </section>
+        </div>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.9.6/lottie.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
