@@ -3,91 +3,409 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keystone AI - The Future of Architectural Design</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Lato:wght@400;700&display=swap" rel="stylesheet">
-</head>
-<body class="homepage-body">
-    <!-- Preloader -->
-    <div class="preloader">
-        <video autoplay muted playsinline id="preloader-video"><source src="images/logo_animation.mp4" type="video/mp4"></video>
-    </div>
+    <title>Keystone AI | Architectural Discovery Studio</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Poppins:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 
-    <!-- Custom Cursor -->
-    <div class="cursor"></div>
-    <div class="cursor-follower"></div>
-
-    <!-- Video background -->
-    <video id="hero-video" autoplay loop muted playsinline preload="auto">
-        <source src="images/feature-video.mp4" type="video/mp4">
-    </video>
-    <div class="video-overlay"></div>
-
-    <!-- Header (starts transparent) -->
-    <header class="main-header">
-        <div class="container">
-            <a href="index.html"><img src="images/logo.svg" alt="Keystone AI Logo" class="logo"></a>
-            <nav>
-                <a href="index.html" class="nav-link active">Home</a>
-                <a href="how-it-works.html" class="nav-link">How It Works</a>
-                <a href="pricing.html" class="nav-link">Pricing</a>
-                <a href="demo.html" class="btn btn-primary">Join the Queue</a>
-            </nav>
-        </div>
-    </header>
-
-    <!-- Main Content with Snap-Scrolling -->
-    <main class="scroll-container">
+    <style>
+        :root { --eggshell: #F9F8F4; --slate: #2C2C2E; --blueprint: #5B7C99; --sage: #A3AD9A; }
+        body { background-color: var(--eggshell); color: var(--slate); font-family: 'Lato', sans-serif; overflow-x: hidden; margin: 0; }
+        .font-serif { font-family: 'Playfair Display', serif; }
+        .font-heading { font-family: 'Poppins', sans-serif; }
         
-        <!-- Panel 1: Hero -->
-        <section class="scroll-section">
-            <div class="panel-content text-center">
-                <h1>Stop Wasting Time.<br>Start Designing.</h1>
-                <p>Keystone AI turns 15 hours of unbilled client discovery<br>into your first paid design session.</p>
-                <a href="demo.html" class="btn btn-primary btn-large">Join the Queue</a>
-            </div>
-        </section>
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--blueprint); }
+        
+        .studio-glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(0,0,0,0.05); }
+        
+        input, select, textarea { background: white !important; border: 1px solid rgba(0,0,0,0.1) !important; padding: 0.8rem !important; outline: none !important; width: 100%; font-size: 14px; }
+        input:focus { border-color: var(--blueprint) !important; }
 
-        <!-- Panel 2: Problem -->
-        <section class="scroll-section">
-            <div class="panel-content">
-                <h3>The Problem</h3>
-                <h2>The $2,000 Hole in Every Project</h2>
-                <p>Firms lose over a dozen hours on unbillable discovery calls and draft sketches. Keystone AI solves this by automating the initial visioning process.</p>
-            </div>
-        </section>
+        html { scroll-behavior: smooth; }
+    </style>
 
-        <!-- Panel 3: Solution -->
-        <section class="scroll-section">
-            <div class="panel-content">
-                <h3>Our Solution</h3>
-                <h2>AI Trained in Your Unique Style</h2>
-                <p>Our platform lets clients describe their vision and instantly generates 3D models and floor plans based on your firm's unique design portfolio.</p>
-            </div>
-        </section>
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: { studio: { eggshell: '#F9F8F4', slate: '#2C2C2E', blueprint: '#5B7C99', sage: '#A3AD9A' } } } }
+        }
+    </script>
+</head>
+<body>
+    <div id="root"></div>
 
-        <!-- Panel 4: Pricing -->
-        <section class="scroll-section">
-            <div class="panel-content">
-                <h3>Simple Pricing</h3>
-                <h2>A Price That Makes Sense</h2>
-                <p>No subscriptions or hidden fees. Our Pay-As-You-Go model is built for the flexibility modern firms need. Starts at just $149.</p>
-                <a href="pricing.html" class="btn btn-primary">View All Pricing</a>
-            </div>
-        </section>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const { motion, useScroll, useTransform, AnimatePresence } = window.Motion;
 
-        <!-- Panel 5: Founder -->
-        <section class="scroll-section">
-            <div class="panel-content text-center">
-                <img src="images/sujan-acharya.jpg" alt="Photo of Sujan Acharya" class="founder-photo">
-                <h2>Built by an Insider</h2>
-                <p>"With a background in Civil Engineering and years working with architects, I saw this problem firsthand. I'm Sujan Acharya, and I'm building the solution I wish we always had."</p>
-            </div>
-        </section>
+        const ASSETS = {
+            watermark: "images/keystone-line-art.png",
+            qrCode: "images/qualtrics-qr.png",
+            team: {
+                sujan: "images/sujan.png", subrat: "images/subrat.png", rhythm: "images/rhythm.png"
+            },
+            phase1: ["images/1.jpg", "images/2.jpg", "images/3.jpg", "images/4.jpg", "images/5.jpg", "images/6.jpg"],
+            phase2: ["images/7.jpeg", "images/8.jpeg", "images/9.jpeg", "images/10.jpeg", "images/11.jpeg", "images/12.jpeg", "images/13.jpeg", "images/14.jpeg"],
+            phase3: ["images/15.jpeg", "images/16.jpeg", "images/17.jpeg", "images/18.jpeg", "images/19.jpeg", "images/20.jpeg"]
+        };
 
-    </main>
+        const JoinModal = ({ isOpen, onClose }) => {
+            const [formData, setFormData] = React.useState({
+                fullName: '',
+                firmName: '',
+                email: '',
+                volume: '1-10 Projects',
+                questions: ''
+            });
+            const [isSubmitting, setIsSubmitting] = React.useState(false);
+            const [isSuccess, setIsSuccess] = React.useState(false);
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.9.6/lottie.min.js"></script>
-    <script src="script.js"></script>
+            const handleChange = (e) => {
+                setFormData({ ...formData, [e.target.name]: e.target.value });
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+
+                // Your exact Google Form submission URL
+                const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeGuYIMrOkuJopGDt-TqRkqVeYrhRE7kIOrWGxEEvz1s4F9NA/formResponse";
+
+                const data = new URLSearchParams();
+                
+                // Mapped to your exact Google Form entry IDs
+                data.append("entry.564926659", formData.fullName);
+                data.append("entry.510477948", formData.firmName);
+                data.append("entry.1527142228", formData.email);
+                data.append("entry.623368817", formData.volume);
+                data.append("entry.1172849489", formData.questions);
+
+                try {
+                    await fetch(GOOGLE_FORM_URL, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded"
+                        },
+                        body: data.toString()
+                    });
+                    
+                    setIsSuccess(true);
+                    
+                    // Reset and close after 3 seconds
+                    setTimeout(() => {
+                        setIsSuccess(false);
+                        onClose();
+                        setFormData({fullName: '', firmName: '', email: '', volume: '1-10 Projects', questions: ''});
+                    }, 3000);
+
+                } catch (error) {
+                    console.error("Error submitting form", error);
+                    alert("There was an error submitting your application. Please try again.");
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
+
+            return (
+                <AnimatePresence>
+                    {isOpen && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-studio-slate/40 backdrop-blur-md">
+                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-studio-eggshell w-full max-w-4xl shadow-2xl relative flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
+                                <button onClick={onClose} className="absolute top-4 right-4 text-3xl font-light z-10">×</button>
+                                
+                                <div className="p-8 md:w-2/3 border-r border-studio-slate/5 overflow-y-auto">
+                                    <h2 className="font-serif text-3xl italic mb-1">Join the Queue.</h2>
+                                    <p className="text-[9px] uppercase tracking-widest text-studio-blueprint font-bold mb-6">Onboarding Private Beta Firms</p>
+                                    
+                                    {isSuccess ? (
+                                        <div className="flex flex-col items-center justify-center h-64 text-center animate-pulse">
+                                            <div className="w-16 h-16 rounded-full bg-studio-blueprint flex items-center justify-center text-white mb-4">
+                                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                            </div>
+                                            <h3 className="font-serif text-2xl italic mb-2">Application Received.</h3>
+                                            <p className="text-[10px] uppercase tracking-widest opacity-60">We will be in touch shortly.</p>
+                                        </div>
+                                    ) : (
+                                        <form onSubmit={handleSubmit} className="space-y-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-1">
+                                                    <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold">Full Name</label>
+                                                    <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} required />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold">Firm Name</label>
+                                                    <input type="text" name="firmName" value={formData.firmName} onChange={handleChange} required />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold">Business Email</label>
+                                                <input type="email" name="email" value={formData.email} onChange={handleChange} required />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold">Annual Project Volume</label>
+                                                <select name="volume" value={formData.volume} onChange={handleChange} className="w-full bg-white border p-3">
+                                                    <option value="1-10 Projects">1-10 Projects</option>
+                                                    <option value="10-30 Projects">10-30 Projects</option>
+                                                    <option value="30+ Projects">30+ Projects</option>
+                                                </select>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold">Additional Questions</label>
+                                                <textarea name="questions" rows="2" value={formData.questions} onChange={handleChange}></textarea>
+                                            </div>
+                                            <button 
+                                                type="submit" 
+                                                disabled={isSubmitting}
+                                                className="w-full py-4 bg-studio-blueprint text-white uppercase tracking-[0.4em] text-[10px] font-bold disabled:opacity-50 transition-all"
+                                            >
+                                                {isSubmitting ? 'Sending to Keystone...' : 'Submit Application'}
+                                            </button>
+                                        </form>
+                                    )}
+                                </div>
+
+                                <div className="p-8 md:w-1/3 bg-studio-slate/5 flex flex-col items-center justify-center text-center">
+                                    <img src={ASSETS.qrCode} className="w-28 h-28 bg-white p-2 mb-4" alt="QR" />
+                                    <h4 className="font-serif text-lg italic mb-2">Help Us Build.</h4>
+                                    <p className="text-[9px] uppercase tracking-widest opacity-40 leading-relaxed">Scan to take our Qualtrics survey. We would love your input in improving our service as we build our MVP.</p>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            );
+        };
+
+        const App = () => {
+            const [loading, setLoading] = useState(true);
+            const [isModalOpen, setModalOpen] = useState(false);
+            const [count, setCount] = useState(0);
+
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    setCount(prev => {
+                        if (prev >= 100) { clearInterval(timer); setTimeout(() => setLoading(false), 500); return 100; }
+                        return prev + 1;
+                    });
+                }, 15);
+                return () => clearInterval(timer);
+            }, []);
+
+            // HORIZONTAL SCROLL
+            const scrollRef = useRef(null);
+            const { scrollYProgress } = useScroll({ target: scrollRef, offset: ["start start", "end end"] });
+            const xTranslate = useTransform(scrollYProgress, [0, 0.1, 1], ["0%", "0%", "-75%"]);
+
+            return (
+                <div className="selection:bg-studio-blueprint selection:text-white">
+                    <AnimatePresence>{loading && (
+                        <motion.div className="fixed inset-0 z-[110] bg-studio-eggshell flex flex-col items-center justify-center" exit={{ opacity: 0 }}>
+                            <motion.img src={ASSETS.watermark} className="w-20 mb-8 opacity-20" animate={{ rotateY: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
+                            <div className="w-48 h-[1px] bg-studio-slate/10 relative"><motion.div className="absolute top-0 left-0 h-full bg-studio-blueprint" initial={{ width: 0 }} animate={{ width: `${count}%` }} /></div>
+                            <p className="mt-4 font-mono text-[10px] tracking-widest">{count}%</p>
+                        </motion.div>
+                    )}</AnimatePresence>
+
+                    <JoinModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
+
+                    {!loading && (
+                        <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                            <nav className="fixed top-0 w-full z-40 py-8 px-10 flex justify-between items-center bg-studio-eggshell/80 backdrop-blur-md border-b border-studio-slate/5">
+                                <div className="flex items-center gap-4">
+                                    <img src={ASSETS.watermark} className="w-6 h-6 opacity-60" />
+                                    <span className="font-serif text-2xl italic font-bold tracking-tighter">Keystone</span>
+                                </div>
+                                <div className="hidden md:flex gap-12 text-[9px] uppercase tracking-[0.4em] font-bold text-studio-slate/60">
+                                    <a href="#problem" className="hover:text-studio-blueprint transition-colors">The Gap</a>
+                                    <a href="#vision" className="hover:text-studio-blueprint transition-colors">Vision</a>
+                                    <a href="#workflow" className="hover:text-studio-blueprint transition-colors">Workflow</a>
+                                    <a href="#pricing" className="hover:text-studio-blueprint transition-colors">Pricing</a>
+                                    <button onClick={() => setModalOpen(true)} className="px-5 py-2 border border-studio-slate/20 rounded-full hover:bg-studio-slate hover:text-white transition-all">Join Queue</button>
+                                </div>
+                            </nav>
+
+                            {/* HERO (No Video, Elegant Studio Setup) */}
+                            <section className="h-screen relative flex items-center justify-center overflow-hidden bg-studio-eggshell">
+                                <motion.img 
+                                    src={ASSETS.watermark} 
+                                    className="absolute inset-0 m-auto w-[90vh] opacity-[0.03] pointer-events-none" 
+                                    animate={{ rotate: 360 }} 
+                                    transition={{ duration: 200, repeat: Infinity, ease: "linear" }}
+                                />
+                                <div className="relative z-10 text-center px-6 mt-16">
+                                    <h1 className="font-serif text-[13vw] md:text-[10vw] leading-[0.85] italic text-studio-slate">Design<br/>Instantly.</h1>
+                                    <p className="mt-10 uppercase tracking-[0.6em] text-[10px] font-bold text-studio-blueprint">The AI Platform for Professional Architects</p>
+                                </div>
+                            </section>
+
+                            {/* PROBLEM SECTION */}
+                            <section id="problem" className="py-32 px-10 bg-white">
+                                <div className="container mx-auto max-w-4xl text-center">
+                                    <span className="text-studio-blueprint text-[10px] uppercase tracking-widest font-black mb-6 block">The $2,000 Hole</span>
+                                    <h2 className="font-serif text-6xl italic mb-10">Stop "Mind-Reading" Your Clients.</h2>
+                                    <p className="text-xl font-light leading-relaxed opacity-70">
+                                        Architects lose an average of <strong className="font-bold">10-15 hours</strong> per project on unbillable discovery calls and sketch revisions. This is a profit drain that erodes margins before the real work begins. Keystone AI solves this by letting clients visualize their dreams within <strong className="font-bold">your</strong> design parameters, before the first meeting.
+                                    </p>
+                                </div>
+                            </section>
+
+                            {/* HORIZONTAL VISION ARCHIVE */}
+                            <section ref={scrollRef} id="vision" className="relative h-[400vh] bg-studio-eggshell">
+                                <div className="sticky top-0 flex h-screen items-center overflow-hidden">
+                                    <motion.div style={{ x: xTranslate }} className="flex gap-20 px-24 items-center">
+                                        <div className="min-w-[45vw] shrink-0">
+                                            <span className="text-studio-blueprint text-[10px] uppercase tracking-widest font-black mb-4 block">Discovery Archive</span>
+                                            <h2 className="font-serif text-8xl italic">The Neural Intake.</h2>
+                                            <p className="text-sm opacity-40 mt-4 uppercase tracking-[0.2em]">Archival Plate 01-06</p>
+                                        </div>
+                                        {ASSETS.phase1.map((img, i) => (
+                                            <div key={i} className="w-[45vh] aspect-[9/16] shrink-0 shadow-2xl bg-white p-2 group overflow-hidden">
+                                                <motion.img 
+                                                    src={img} 
+                                                    initial={{ filter: "grayscale(100%)" }}
+                                                    whileInView={{ filter: "grayscale(0%)" }}
+                                                    viewport={{ margin: "-10%" }}
+                                                    whileHover={{ filter: "grayscale(0%)", scale: 1.05 }}
+                                                    transition={{ duration: 0.8 }}
+                                                    className="w-full h-full object-cover" 
+                                                />
+                                            </div>
+                                        ))}
+                                    </motion.div>
+                                </div>
+                            </section>
+
+                            {/* PORTFOLIO GRID */}
+                            <section id="portfolio" className="py-32 px-10 bg-studio-slate text-studio-eggshell">
+                                <div className="container mx-auto">
+                                    <h2 className="font-serif text-6xl italic mb-20 text-center">Neural Synthesis Outputs.</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                        {ASSETS.phase2.map((img, i) => (
+                                            <div key={i} className={`aspect-[9/16] overflow-hidden ${i % 2 !== 0 ? 'md:mt-12' : ''}`}>
+                                                <motion.img 
+                                                    src={img} 
+                                                    initial={{ filter: "grayscale(100%)" }}
+                                                    whileInView={{ filter: "grayscale(0%)" }}
+                                                    viewport={{ once: false, amount: 0.3 }}
+                                                    whileHover={{ filter: "grayscale(0%)", scale: 1.05 }}
+                                                    transition={{ duration: 0.8 }}
+                                                    className="w-full h-full object-cover" 
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* THE WORKFLOW */}
+                            <section id="workflow" className="py-32 px-10 bg-white">
+                                <div className="container mx-auto max-w-6xl">
+                                    <div className="text-center mb-20">
+                                        <span className="text-studio-blueprint text-[10px] uppercase tracking-widest font-black mb-4 block">The Studio Pipeline</span>
+                                        <h2 className="font-serif text-6xl italic">From Discovery to Billable Design.</h2>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+                                        {[
+                                            { title: "Unique Client Access", img: ASSETS.phase3[0], desc: "The firm sends a unique, time-limited link to a prospective client. This link leads to a studio-branded AI interface trained on your firm's specific design DNA." },
+                                            { title: "Autonomous Generation", img: ASSETS.phase3[1], desc: <>The client describes their vision using natural language. Keystone AI instantly generates workable 2D floor plans, 3D models, and a <strong className="font-bold">preliminary cost estimate</strong>.</> },
+                                            { title: "Expert Refinement", img: ASSETS.phase3[2], desc: "The client arrives at the first meeting with a solid visual starting point. Your first hour becomes a billable design session focused on expert refinement, not basic discovery." }
+                                        ].map((item, i) => (
+                                            <div key={i} className="group">
+                                                <div className="aspect-[9/16] mb-8 shadow-xl overflow-hidden bg-studio-eggshell">
+                                                    <motion.img 
+                                                        src={item.img} 
+                                                        initial={{ filter: "grayscale(100%)", scale: 1 }}
+                                                        whileInView={{ filter: "grayscale(0%)" }}
+                                                        viewport={{ once: false, amount: 0.5 }}
+                                                        whileHover={{ filter: "grayscale(0%)", scale: 1.05 }}
+                                                        transition={{ duration: 0.8 }}
+                                                        className="w-full h-full object-cover" 
+                                                    />
+                                                </div>
+                                                <h3 className="font-serif text-2xl italic mb-4">{i + 1}. {item.title}</h3>
+                                                <p className="text-sm opacity-60 leading-relaxed font-light">{item.desc}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* PRICING */}
+                            <section id="pricing" className="py-32 px-10 bg-studio-eggshell">
+                                <div className="container mx-auto max-w-5xl">
+                                    <div className="text-center mb-20">
+                                        <h2 className="font-serif text-6xl italic">The Value Model.</h2>
+                                        <p className="mt-4 uppercase tracking-[0.3em] text-[10px] opacity-50">Pay-As-You-Go Strategy</p>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                        {[
+                                            { name: "Trial Session", price: "149", desc: "Pay only for a successful generation. Perfect for low-risk testing." },
+                                            { name: "Studio 10-Pack", price: "1,199", desc: "$119 per session. Built for growing firms with active pipelines.", popular: true },
+                                            { name: "Firm 20-Pack", price: "2,199", desc: "$109 per session. Maximum value for established practices." }
+                                        ].map((tier, i) => (
+                                            <div key={i} className={`p-10 border ${tier.popular ? 'border-studio-blueprint bg-white scale-105 shadow-xl' : 'border-studio-slate/10 shadow-sm'} text-center transition-all`}>
+                                                <h3 className="uppercase tracking-[0.3em] text-[9px] font-black mb-6">{tier.name}</h3>
+                                                <div className="text-5xl font-serif italic mb-6">${tier.price}</div>
+                                                <p className="text-xs opacity-50 mb-10 leading-relaxed">{tier.desc}</p>
+                                                <button onClick={() => setModalOpen(true)} className="w-full py-4 border border-studio-slate text-[9px] font-bold uppercase tracking-widest hover:bg-studio-slate hover:text-white transition-all">Join Queue</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="mt-24 text-center max-w-2xl mx-auto">
+                                        <h4 className="font-serif text-2xl italic mb-4">Land & Expand</h4>
+                                        <p className="text-sm opacity-50 leading-relaxed italic">"Initial use is low-risk. As the value becomes clear, we grow with your project volume. Absolute transparency, absolute flexibility."</p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* TEAM */}
+                            <section id="team" className="py-32 px-10 bg-white">
+                                <div className="container mx-auto max-w-6xl text-center">
+                                    <h2 className="font-serif text-6xl italic mb-24">The Minds.</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+                                        {[
+                                            { name: "Sujan Acharya", role: "CEO", img: ASSETS.team.sujan },
+                                            { name: "Subrat Acharya", role: "CFO", img: ASSETS.team.subrat },
+                                            { name: "Rhythm Bhattarai", role: "CTO", img: ASSETS.team.rhythm }
+                                        ].map((member, i) => (
+                                            <div key={i} className="text-center group">
+                                                <div className="aspect-[9/16] bg-studio-eggshell overflow-hidden mb-8 border border-studio-slate/5">
+                                                    <motion.img 
+                                                        src={member.img} 
+                                                        initial={{ filter: "grayscale(100%)" }}
+                                                        whileInView={{ filter: "grayscale(0%)" }}
+                                                        whileHover={{ filter: "grayscale(0%)", scale: 1.05 }}
+                                                        transition={{ duration: 0.8 }}
+                                                        className="w-full h-full object-cover" 
+                                                    />
+                                                </div>
+                                                <h3 className="font-serif text-3xl italic mb-1">{member.name}</h3>
+                                                <p className="text-studio-blueprint uppercase tracking-widest text-[9px] font-bold">{member.role}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </section>
+
+                            <footer className="py-20 bg-studio-eggshell border-t border-studio-slate/5 text-center relative overflow-hidden">
+                                <img src={ASSETS.watermark} className="absolute bottom-0 right-0 w-64 opacity-[0.03] pointer-events-none translate-x-1/4 translate-y-1/4" />
+                                <img src={ASSETS.watermark} className="w-12 mx-auto mb-10 opacity-30" />
+                                <p className="text-[9px] opacity-30 uppercase tracking-widest">© 2025 Keystone AI Studio // Neural Architecture</p>
+                            </footer>
+                        </motion.main>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
