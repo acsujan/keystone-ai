@@ -1,64 +1,76 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 export default async function handler(req, res) {
-  // CORS
-  res.setHeader("Access-Control-Allow-Credentials", true);
+  // CORS (optional if same-origin)
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
-  );
+  res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
+  if (req.method !== "POST") return res.status(405).json({ success: false, message: "Method Not Allowed" });
 
   try {
-    const { surveyData } = req.body;
-    const apiKey = process.env.GOOGLE_API_KEY;
+    const apiKey = process.env.GOOGLE_API_KEY; // make sure this matches Vercel exactly
+    if (!apiKey) return res.status(500).json({ success: false, message: "Missing GOOGLE_API_KEY" });
 
-    if (!apiKey) throw new Error("Missing Google API Key");
+    const { surveyData } = req.body ?? {};
+    if (!surveyData) return res.status(400).json({ success: false, message: "Missing surveyData" });
 
-    // Initialize correct client
-    const ai = new GoogleGenerativeAI(apiKey);
+    const ai = new GoogleGenAI({ apiKey });
 
-    // --- TEXT GENERATION ---
-    const textModel = ai.getGenerativeModel({
-      model: "gemini-3-flash-preview"
-    });
-
+    // 1) Generate an optimized prompt (text model)
     const textPrompt = `
-      Act as an architectural prompt engineer.
-      Convert these user requirements into a single, detailed image generation prompt.
-      User Input: ${JSON.stringify(surveyData)}
-      Output ONLY the prompt text.
-    `;
+Act as an architectural prompt engineer.
+Convert these user requirements into a single, detailed image generation prompt.
+User Input: ${JSON.stringify(surveyData)}
+Output ONLY the prompt text.
+`.trim();
 
-    const textResult = await textModel.generateContent(textPrompt);
-    const optimizedPrompt = textResult.response.text().trim();
-
-    console.log("Generated Prompt:", optimizedPrompt);
-
-    // --- IMAGE GENERATION ---
-    const imageModel = ai.getGenerativeModel({
-      model: "gemini-3-pro-image-preview"
+    const textResp = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: textPrompt,
     });
 
-    const imageResult = await imageModel.generateContent(optimizedPrompt, {
-      responseMimeType: "image/jpeg"
+    const optimizedPrompt = (textResp.text || "").trim();
+    if (!optimizedPrompt) {
+      return res.status(500).json({ success: false, message: "Prompt generation returned empty text" });
+    }
+
+    // 2) Generate image (native image model)
+    const imgResp = await ai.models.generateContent({
+      model: "gemini-3-pro-image-preview",
+      contents: optimizedPrompt,
     });
 
-    const imageBase64 =
-      imageResult.response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || null;
+    // Find the inline image part
+    let imageBase64 = null;
+    let mimeType = null;
+
+    for (const part of imgResp?.candidates?.[0]?.content?.parts ?? []) {
+      if (part.inlineData?.data) {
+        imageBase64 = part.inlineData.data;
+        mimeType = part.inlineData.mimeType || "image/png";
+        break;
+      }
+    }
+
+    if (!imageBase64) {
+      // Useful debug: sometimes the model returns only text if it can’t/doesn’t generate an image
+      return res.status(500).json({
+        success: false,
+        message: "No image returned (no inlineData part).",
+        debugText: imgResp?.text ?? null,
+      });
+    }
 
     return res.status(200).json({
       success: true,
       prompt: optimizedPrompt,
-      image: imageBase64
+      image: imageBase64,
+      mimeType,
     });
-
-  } catch (error) {
-    console.error("Server Error:", error);
-    return res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: err?.message || "Server error" });
   }
 }
