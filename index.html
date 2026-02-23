@@ -181,7 +181,141 @@
                 </AnimatePresence>
             );
         };
+// --- NEW COMPONENT: AI GENERATOR ---
+        const DesignGenerator = () => {
+            const [formData, setFormData] = useState({
+                style: 'Modern Minimalist',
+                location: 'Cliffside (Ocean View)',
+                features: ''
+            });
+            const [status, setStatus] = useState('idle'); // idle, loading, success, error
+            const [result, setResult] = useState(null);
 
+            const handleGenSubmit = async (e) => {
+                e.preventDefault();
+                setStatus('loading');
+                
+                try {
+                    const response = await fetch('/api/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ surveyData: formData })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!data.success) throw new Error(data.message || 'Generation failed');
+                    
+                    setResult(data);
+                    setStatus('success');
+                } catch (err) {
+                    console.error(err);
+                    setStatus('error');
+                }
+            };
+
+            return (
+                <section id="generator" className="py-32 px-10 bg-studio-eggshell relative overflow-hidden">
+                    <div className="container mx-auto max-w-6xl">
+                         <div className="flex flex-col md:flex-row gap-16 items-center">
+                            
+                            {/* LEFT: FORM */}
+                            <div className="w-full md:w-1/2 z-10">
+                                <span className="text-studio-blueprint text-[10px] uppercase tracking-widest font-black mb-4 block">Interactive Demo</span>
+                                <h2 className="font-serif text-5xl italic mb-8">Test the Engine.</h2>
+                                <p className="text-sm opacity-60 mb-10 leading-relaxed">Experience a fraction of Keystone's power. Generate a conceptual visualization in real-time.</p>
+                                
+                                <form onSubmit={handleGenSubmit} className="space-y-6 bg-white p-8 shadow-xl border border-studio-slate/5">
+                                    <div>
+                                        <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Architectural Style</label>
+                                        <select 
+                                            className="w-full bg-studio-eggshell border-none p-4 text-sm"
+                                            value={formData.style}
+                                            onChange={(e) => setFormData({...formData, style: e.target.value})}
+                                        >
+                                            <option value="Modern Minimalist">Modern Minimalist</option>
+                                            <option value="Industrial Loft">Industrial Loft</option>
+                                            <option value="Scandinavian">Scandinavian</option>
+                                            <option value="Rustic Cabin">Rustic Cabin</option>
+                                            <option value="Brutalist">Brutalist Concrete</option>
+                                            <option value="Futuristic Organic">Futuristic Organic</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Environment</label>
+                                        <select 
+                                            className="w-full bg-studio-eggshell border-none p-4 text-sm"
+                                            value={formData.location}
+                                            onChange={(e) => setFormData({...formData, location: e.target.value})}
+                                        >
+                                            <option value="Cliffside overlooking ocean">Cliffside (Ocean View)</option>
+                                            <option value="Deep Forest">Deep Forest</option>
+                                            <option value="Urban City Center">Urban City Center</option>
+                                            <option value="Snowy Mountain">Snowy Mountain</option>
+                                            <option value="Desert Oasis">Desert Oasis</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Key Feature (Optional)</label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="e.g. Infinity pool, floor-to-ceiling glass"
+                                            className="w-full bg-studio-eggshell border-none p-4 text-sm"
+                                            value={formData.features}
+                                            onChange={(e) => setFormData({...formData, features: e.target.value})}
+                                        />
+                                    </div>
+
+                                    <button 
+                                        type="submit" 
+                                        disabled={status === 'loading'}
+                                        className="w-full py-4 bg-studio-slate text-white uppercase tracking-[0.4em] text-[10px] font-bold hover:bg-studio-blueprint transition-all disabled:opacity-50"
+                                    >
+                                        {status === 'loading' ? 'Synthesizing...' : 'Generate Concept'}
+                                    </button>
+                                    {status === 'error' && <p className="text-red-500 text-xs mt-2 text-center">Connection failed. Please try again.</p>}
+                                </form>
+                            </div>
+
+                            {/* RIGHT: RESULT DISPLAY */}
+                            <div className="w-full md:w-1/2 aspect-square bg-white shadow-2xl flex items-center justify-center relative overflow-hidden border border-studio-slate/5">
+                                {status === 'idle' && (
+                                    <div className="text-center opacity-20">
+                                        <div className="font-serif italic text-4xl mb-2">Awaiting Input</div>
+                                        <div className="text-[9px] uppercase tracking-widest">Neural Engine Standby</div>
+                                    </div>
+                                )}
+                                
+                                {status === 'loading' && (
+                                    <div className="text-center">
+                                        <motion.div 
+                                            className="w-16 h-16 border-4 border-studio-blueprint border-t-transparent rounded-full mx-auto mb-4"
+                                            animate={{ rotate: 360 }}
+                                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                        />
+                                        <p className="text-[9px] uppercase tracking-widest animate-pulse">Dreaming...</p>
+                                    </div>
+                                )}
+
+                                {status === 'success' && result && (
+                                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative w-full h-full group">
+                                        {result.image ? (
+                                            <img src={`data:image/png;base64,${result.image}`} className="w-full h-full object-cover" />
+                                        ) : (
+                                             <div className="p-10 text-center"><p>Prompt Generated (Image quota limit):</p><p className="text-xs mt-2">{result.prompt}</p></div>
+                                        )}
+                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-8 text-center text-white">
+                                            <p className="font-serif italic text-lg">{result.prompt}</p>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </div>
+
+                         </div>
+                    </div>
+                </section>
+            );
+        };
         const App = () => {
             const [loading, setLoading] = useState(true);
             const [isModalOpen, setModalOpen] = useState(false);
@@ -302,7 +436,7 @@
                                     </div>
                                 </div>
                             </section>
-
+<DesignGenerator />
                             {/* THE WORKFLOW */}
                             <section id="workflow" className="py-32 px-10 bg-white">
                                 <div className="container mx-auto max-w-6xl">
@@ -409,3 +543,4 @@
     </script>
 </body>
 </html>
+
