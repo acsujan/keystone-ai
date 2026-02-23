@@ -1,4 +1,4 @@
-import { GoogleAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
   // CORS
@@ -17,16 +17,19 @@ export default async function handler(req, res) {
     const { surveyData } = req.body;
     const apiKey = process.env.GOOGLE_API_KEY;
 
-    if (!apiKey) throw new Error("API Key missing");
+    if (!apiKey) throw new Error("Missing Google API Key");
 
-    const ai = new GoogleAI({ apiKey });
+    // Initialize correct client
+    const ai = new GoogleGenerativeAI(apiKey);
 
     // --- TEXT GENERATION ---
-    const textModel = ai.getGenerativeModel({ model: "gemini-3-flash-preview" });
+    const textModel = ai.getGenerativeModel({
+      model: "gemini-3-flash-preview"
+    });
 
     const textPrompt = `
       Act as an architectural prompt engineer.
-      Convert these user requirements into a SINGLE, detailed image generation prompt.
+      Convert these user requirements into a single, detailed image generation prompt.
       User Input: ${JSON.stringify(surveyData)}
       Output ONLY the prompt text.
     `;
@@ -45,7 +48,8 @@ export default async function handler(req, res) {
       responseMimeType: "image/jpeg"
     });
 
-    const imageBase64 = imageResult.response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || null;
+    const imageBase64 =
+      imageResult.response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || null;
 
     return res.status(200).json({
       success: true,
