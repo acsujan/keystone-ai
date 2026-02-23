@@ -70,7 +70,8 @@ Output ONLY the prompt text.
       mimeType,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ success: false, message: err?.message || "Server error" });
-  }
+  console.error("Generate API error:", err);
+  return res.status(500).json({ success: false, message: err?.message || "Server error" });
 }
+}
+
