@@ -300,19 +300,7 @@
                                 {status === 'success' && result && (
                                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative w-full h-full group">
                                         {result.image ? (
-                                            const mime = result.mimeType || "image/png";
-previewContainer.innerHTML = `
-  <div class="space-y-3">
-    <img
-      src="data:${mime};base64,${result.image}"
-      class="w-full rounded-lg border"
-      alt="Generated design preview"
-    />
-    <div class="text-xs text-gray-500">
-      <div><strong>MIME:</strong> ${mime}</div>
-    </div>
-  </div>
-`;
+                                            <img src={`data:image/png;base64,${result.image}`} className="w-full h-full object-cover" />
                                         ) : (
                                              <div className="p-10 text-center"><p>Prompt Generated (Image quota limit):</p><p className="text-xs mt-2">{result.prompt}</p></div>
                                         )}
@@ -555,5 +543,4 @@ previewContainer.innerHTML = `
     </script>
 </body>
 </html>
-
 
