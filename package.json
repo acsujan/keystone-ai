@@ -8,6 +8,6 @@
     "start": "node api/generate.js"
   },
   "dependencies": {
-    "@google/genai": "^1.0.0"
+    "@google/genai": "^1.42.0"
   }
 }
