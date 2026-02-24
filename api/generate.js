@@ -15,71 +15,68 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log("STEP 1: /api/generate hit");
-// --- ADD THIS PASSKEY SECURITY CHECK ---
-    const passkey = req.body?.passkey;
+    // 1. Security Check
+    const apiKey = process.env.GOOGLE_API_KEY;
+    const body = req.body ?? {};
+    const { surveyData, passkey, refinementInput } = body; // Extract refinementInput
+    
+    // Passkey Validation
     const validKeysString = process.env.VALID_PASSKEYS || "KEYSTONE-BETA";
     const validKeys = validKeysString.split(",").map(k => k.trim());
-    
     if (!validKeys.includes(passkey)) {
-      console.log("Unauthorized attempt with passkey:", passkey);
       return res.status(401).json({ success: false, message: "Unauthorized: Invalid Passkey" });
     }
-    // ---------------------------------------
-    const apiKey = process.env.GOOGLE_API_KEY;
-    if (!apiKey) {
-      console.log("STEP 1b: Missing GOOGLE_API_KEY");
-      return res.status(500).json({ success: false, message: "Missing GOOGLE_API_KEY" });
-    }
 
-    const body = req.body ?? {};
-    const surveyData = body.surveyData;
+    if (!apiKey) return res.status(500).json({ success: false, message: "Missing API Key" });
+    if (!surveyData) return res.status(400).json({ success: false, message: "Missing surveyData" });
 
-    if (!surveyData) {
-      console.log("STEP 1c: Missing surveyData");
-      return res.status(400).json({ success: false, message: "Missing surveyData" });
-    }
-
-    console.log("STEP 2: Initializing GoogleGenAI client");
+    // 2. Initialize AI
     const ai = new GoogleGenAI({ apiKey });
 
-    // --- UPDATED PROMPT ENGINEER INSTRUCTIONS ---
-    const promptEngineerInstruction = `
+    // 3. Construct the Prompt Engineering Instruction
+    let baseInstruction = `
 Act as a master architectural prompt engineer.
-Convert the following user requirements into a single, highly detailed image generation prompt.
+Convert user requirements into a SINGLE, highly detailed image generation prompt.
 
 CRITICAL COMPOSITION INSTRUCTIONS:
-You must explicitly command the image generator to create an ultra-wide, side-by-side composite image.
-- LEFT SIDE: A photorealistic, high-end 3D exterior render of the house. It must accurately reflect the specific geographic location, terrain, and weather context provided.
+You must explicitly command the image generator to create an ultra-wide (16:6 aspect ratio), side-by-side composite image.
+- LEFT SIDE: A photorealistic, high-end 3D exterior render of the house.
 - RIGHT SIDE: A clean, professional 2D architectural floor plan layout that corresponds logically to the 3D render.
 - Ensure the materials, number of stories, and special features are visually represented.
-
-User Requirements: ${JSON.stringify(surveyData)}
-
-Output ONLY the final image generation prompt text. Do not include any conversational filler.
 `.trim();
 
-    console.log("STEP 3: Generating prompt text");
-    const textResp = await ai.models.generateContent({
-      model: "gemini-3-flash-preview", // Kept exactly as you had it
-      contents: promptEngineerInstruction,
-    });
-
-    const optimizedPrompt = (textResp?.text || "").trim();
-    if (!optimizedPrompt) {
-      return res.status(500).json({ success: false, message: "Prompt generation returned empty text" });
+    // If this is a refinement, we add specific instructions to MODIFY the previous concept
+    if (refinementInput) {
+        baseInstruction += `\n\n
+*** REFINEMENT MODE ACTIVE ***
+The user wants to MODIFY their previous concept based on this feedback: "${refinementInput}".
+- Keep the core structure (Location: ${surveyData.location}, Size: ${surveyData.lotSize}) mostly the same.
+- APPLY the user's specific changes to the style, materials, or features.
+- The output must still be a side-by-side 3D render and floor plan.
+`.trim();
+    } else {
+        baseInstruction += `\n\nUser Requirements: ${JSON.stringify(surveyData)}`;
     }
 
-    // 2) Generate image
-    console.log("STEP 4: Generating image");
+    baseInstruction += `\n\nOutput ONLY the final image generation prompt text.`;
+
+    // 4. Generate Prompt
+    const textResp = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: baseInstruction,
+    });
+    const optimizedPrompt = (textResp?.text || "").trim();
+
+    if (!optimizedPrompt) return res.status(500).json({ success: false, message: "Prompt generation failed" });
+
+    // 5. Generate Image
     const imgResp = await ai.models.generateContent({
-      model: "gemini-3-pro-image-preview", // Kept exactly as you had it
+      model: "gemini-3-pro-image-preview",
       contents: optimizedPrompt,
     });
 
     let imageBase64 = null;
     let mimeType = null;
-
     const parts = imgResp?.candidates?.[0]?.content?.parts ?? [];
     for (const part of parts) {
       if (part?.inlineData?.data) {
@@ -89,20 +86,18 @@ Output ONLY the final image generation prompt text. Do not include any conversat
       }
     }
 
-    if (!imageBase64) {
-      return res.status(500).json({ success: false, message: "No image returned." });
-    }
+    if (!imageBase64) return res.status(500).json({ success: false, message: "No image returned." });
 
-    console.log("STEP 5: Success - returning image");
     return res.status(200).json({
       success: true,
       prompt: optimizedPrompt,
       image: imageBase64,
       mimeType,
+      isRefined: !!refinementInput // Return flag so frontend knows it was a refinement
     });
+
   } catch (err) {
-    console.error("Generate API error (full):", err);
+    console.error("Generate API error:", err);
     return res.status(500).json({ success: false, message: err?.message || "Server error" });
   }
 }
-
