@@ -7,13 +7,13 @@ export default function handler(req, res) {
 
   const { passkey } = req.body || {};
   
-  // 1. Define Basic Keys (from Env or default)
-  const basicString = process.env.VALID_PASSKEYS || "KEYSTONE-BETA";
-  const basicKeys = basicString.split(",").map(k => k.trim());
+  // SECURE: We default to an empty string "" if the Env Var is missing.
+  // This means if you forget to set it in Vercel, access is denied (Safe Fail).
+  const basicString = process.env.VALID_PASSKEYS || "";
+  const basicKeys = basicString.split(",").map(k => k.trim()).filter(k => k);
 
-  // 2. Define Premium Keys (from Env or default)
-  const premiumString = process.env.VALID_PASSKEYS_PREMIUM || "KEYSTONE-PRO";
-  const premiumKeys = premiumString.split(",").map(k => k.trim());
+  const premiumString = process.env.VALID_PASSKEYS_PREMIUM || "";
+  const premiumKeys = premiumString.split(",").map(k => k.trim()).filter(k => k);
 
   if (premiumKeys.includes(passkey)) {
     return res.status(200).json({ success: true, tier: 'premium' });
