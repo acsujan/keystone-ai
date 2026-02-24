@@ -1,13 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
 
-// (Optional but recommended) Force Node.js runtime on Vercel.
-// If you also add vercel.json, you can remove this.
 export const config = {
   runtime: "nodejs",
 };
 
 export default async function handler(req, res) {
-  // Basic CORS (safe even if you don't need it)
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -26,8 +23,6 @@ export default async function handler(req, res) {
       return res.status(500).json({ success: false, message: "Missing GOOGLE_API_KEY" });
     }
 
-    // Vercel often provides parsed req.body when Content-Type is application/json
-    // but we guard anyway.
     const body = req.body ?? {};
     const surveyData = body.surveyData;
 
@@ -39,38 +34,40 @@ export default async function handler(req, res) {
     console.log("STEP 2: Initializing GoogleGenAI client");
     const ai = new GoogleGenAI({ apiKey });
 
-    // 1) Generate an optimized prompt
+    // --- UPDATED PROMPT ENGINEER INSTRUCTIONS ---
     const promptEngineerInstruction = `
-Act as an architectural prompt engineer.
-Convert these user requirements into a single, detailed image generation prompt.
-User Input: ${JSON.stringify(surveyData)}
-Output ONLY the prompt text.
+Act as a master architectural prompt engineer.
+Convert the following user requirements into a single, highly detailed image generation prompt.
+
+CRITICAL COMPOSITION INSTRUCTIONS:
+You must explicitly command the image generator to create an ultra-wide, side-by-side composite image.
+- LEFT SIDE: A photorealistic, high-end 3D exterior render of the house. It must accurately reflect the specific geographic location, terrain, and weather context provided.
+- RIGHT SIDE: A clean, professional 2D architectural floor plan layout that corresponds logically to the 3D render.
+- Ensure the materials, number of stories, and special features are visually represented.
+
+User Requirements: ${JSON.stringify(surveyData)}
+
+Output ONLY the final image generation prompt text. Do not include any conversational filler.
 `.trim();
 
     console.log("STEP 3: Generating prompt text");
     const textResp = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3-flash-preview", // Kept exactly as you had it
       contents: promptEngineerInstruction,
     });
 
     const optimizedPrompt = (textResp?.text || "").trim();
     if (!optimizedPrompt) {
-      console.log("STEP 3b: Empty optimized prompt");
-      return res.status(500).json({
-        success: false,
-        message: "Prompt generation returned empty text",
-        debug: { text: textResp?.text ?? null },
-      });
+      return res.status(500).json({ success: false, message: "Prompt generation returned empty text" });
     }
 
     // 2) Generate image
     console.log("STEP 4: Generating image");
     const imgResp = await ai.models.generateContent({
-      model: "gemini-3-pro-image-preview",
+      model: "gemini-3-pro-image-preview", // Kept exactly as you had it
       contents: optimizedPrompt,
     });
 
-    // Find the first inlineData part (image bytes)
     let imageBase64 = null;
     let mimeType = null;
 
@@ -84,12 +81,7 @@ Output ONLY the prompt text.
     }
 
     if (!imageBase64) {
-      console.log("STEP 4b: No inlineData returned", { partsCount: parts.length });
-      return res.status(500).json({
-        success: false,
-        message: "No image returned (no inlineData part).",
-        debugText: imgResp?.text ?? null,
-      });
+      return res.status(500).json({ success: false, message: "No image returned." });
     }
 
     console.log("STEP 5: Success - returning image");
@@ -101,9 +93,6 @@ Output ONLY the prompt text.
     });
   } catch (err) {
     console.error("Generate API error (full):", err);
-    return res.status(500).json({
-      success: false,
-      message: err?.message || "Server error",
-    });
+    return res.status(500).json({ success: false, message: err?.message || "Server error" });
   }
 }
