@@ -1,8 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 
-export const config = {
-  runtime: "nodejs",
-};
+export const config = { runtime: "nodejs" };
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -10,21 +8,22 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") {
-    return res.status(405).json({ success: false, message: "Method Not Allowed" });
-  }
+  if (req.method !== "POST") return res.status(405).json({ success: false, message: "Method Not Allowed" });
 
   try {
     const apiKey = process.env.GOOGLE_API_KEY;
     const body = req.body ?? {};
     const { surveyData, passkey, refinementInput } = body;
 
-    // Passkey Validation
-    const validKeysString = process.env.VALID_PASSKEYS || "KEYSTONE-BETA";
-    const validKeys = validKeysString.split(",").map(k => k.trim());
-    if (!validKeys.includes(passkey)) {
+    // --- SECURE AUTH LOGIC (No Hardcoded Fallbacks) ---
+    const basicKeys = (process.env.VALID_PASSKEYS || "").split(",").map(k => k.trim()).filter(k => k);
+    const premiumKeys = (process.env.VALID_PASSKEYS_PREMIUM || "").split(",").map(k => k.trim()).filter(k => k);
+    const allValidKeys = [...basicKeys, ...premiumKeys];
+
+    if (!allValidKeys.includes(passkey)) {
       return res.status(401).json({ success: false, message: "Unauthorized: Invalid Passkey" });
     }
+    // --------------------------------------------------
 
     if (!apiKey) return res.status(500).json({ success: false, message: "Missing API Key" });
 
@@ -113,3 +112,4 @@ OUTPUT FORMAT (JSON ONLY - NO MARKDOWN):
     return res.status(500).json({ success: false, message: err?.message || "Server error" });
   }
 }
+
