@@ -15,11 +15,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Security Check
     const apiKey = process.env.GOOGLE_API_KEY;
     const body = req.body ?? {};
-    const { surveyData, passkey, refinementInput } = body; // Extract refinementInput
-    
+    const { surveyData, passkey, refinementInput } = body;
+
     // Passkey Validation
     const validKeysString = process.env.VALID_PASSKEYS || "KEYSTONE-BETA";
     const validKeys = validKeysString.split(",").map(k => k.trim());
@@ -28,51 +27,57 @@ export default async function handler(req, res) {
     }
 
     if (!apiKey) return res.status(500).json({ success: false, message: "Missing API Key" });
-    if (!surveyData) return res.status(400).json({ success: false, message: "Missing surveyData" });
 
-    // 2. Initialize AI
     const ai = new GoogleGenAI({ apiKey });
 
-    // 3. Construct the Prompt Engineering Instruction
+    // 1. Construct the Intelligence Prompt
     let baseInstruction = `
-Act as a master architectural prompt engineer.
-Convert user requirements into a SINGLE, highly detailed image generation prompt.
+Act as a Senior Architectural Project Manager.
+You must output a strictly formatted JSON object containing two parts: an image generation prompt and a feasibility brief.
 
-CRITICAL COMPOSITION INSTRUCTIONS:
-You must explicitly command the image generator to create an ultra-wide (16:6 aspect ratio), side-by-side composite image.
-- LEFT SIDE: A photorealistic, high-end 3D exterior render of the house.
-- RIGHT SIDE: A clean, professional 2D architectural floor plan layout that corresponds logically to the 3D render.
-- Ensure the materials, number of stories, and special features are visually represented.
+INPUT DATA:
+${refinementInput ? `REFINEMENT REQUEST: "${refinementInput}"` : `USER REQUIREMENTS: ${JSON.stringify(surveyData)}`}
+
+INSTRUCTIONS:
+1. Analyze the location, size, and materials.
+2. Estimate a construction cost range (High/Low) based on 2025 US market rates for that specific location.
+3. Estimate a construction timeline.
+4. List 3 key material recommendations.
+5. Create the image prompt for a side-by-side 3D Render (Left) and Floor Plan (Right).
+
+OUTPUT FORMAT (JSON ONLY):
+{
+  "imagePrompt": "The detailed image generation prompt text...",
+  "brief": {
+    "costRange": "$X - $Y (Estimated)",
+    "timeline": "X - Y Months",
+    "materials": ["Material 1", "Material 2", "Material 3"],
+    "notes": "A short, professional note about site feasibility or zoning based on the location."
+  }
+}
 `.trim();
 
-    // If this is a refinement, we add specific instructions to MODIFY the previous concept
-    if (refinementInput) {
-        baseInstruction += `\n\n
-*** REFINEMENT MODE ACTIVE ***
-The user wants to MODIFY their previous concept based on this feedback: "${refinementInput}".
-- Keep the core structure (Location: ${surveyData.location}, Size: ${surveyData.lotSize}) mostly the same.
-- APPLY the user's specific changes to the style, materials, or features.
-- The output must still be a side-by-side 3D render and floor plan.
-`.trim();
-    } else {
-        baseInstruction += `\n\nUser Requirements: ${JSON.stringify(surveyData)}`;
-    }
-
-    baseInstruction += `\n\nOutput ONLY the final image generation prompt text.`;
-
-    // 4. Generate Prompt
+    // 2. Generate The Intelligence & Prompt
     const textResp = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: baseInstruction,
+      generationConfig: { responseMimeType: "application/json" } // Force JSON
     });
-    const optimizedPrompt = (textResp?.text || "").trim();
 
-    if (!optimizedPrompt) return res.status(500).json({ success: false, message: "Prompt generation failed" });
+    const rawText = textResp?.text || "{}";
+    let parsedData;
+    try {
+        parsedData = JSON.parse(rawText);
+    } catch (e) {
+        // Fallback if model didn't output perfect JSON
+        console.error("JSON Parse Error", e);
+        return res.status(500).json({ success: false, message: "Failed to generate project brief." });
+    }
 
-    // 5. Generate Image
+    // 3. Generate The Image
     const imgResp = await ai.models.generateContent({
       model: "gemini-3-pro-image-preview",
-      contents: optimizedPrompt,
+      contents: parsedData.imagePrompt,
     });
 
     let imageBase64 = null;
@@ -90,10 +95,11 @@ The user wants to MODIFY their previous concept based on this feedback: "${refin
 
     return res.status(200).json({
       success: true,
-      prompt: optimizedPrompt,
+      prompt: parsedData.imagePrompt,
+      brief: parsedData.brief, // Return the intelligence data
       image: imageBase64,
       mimeType,
-      isRefined: !!refinementInput // Return flag so frontend knows it was a refinement
+      isRefined: !!refinementInput
     });
 
   } catch (err) {
