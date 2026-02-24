@@ -184,8 +184,12 @@
 // --- NEW COMPONENT: AI GENERATOR ---
         const DesignGenerator = () => {
             const [formData, setFormData] = useState({
-                style: 'Modern Minimalist',
-                location: 'Cliffside (Ocean View)',
+                location: '',
+                stories: '1 Story',
+                bedrooms: '3 Bedrooms',
+                bathrooms: '2 Baths',
+                materials: 'Wood Framing with Natural Finishes',
+                lotSize: '',
                 features: ''
             });
             const [status, setStatus] = useState('idle'); // idle, loading, success, error
@@ -216,54 +220,91 @@
 
             return (
                 <section id="generator" className="py-32 px-10 bg-studio-eggshell relative overflow-hidden">
-                    <div className="container mx-auto max-w-6xl">
-                         <div className="flex flex-col md:flex-row gap-16 items-center">
+                    <div className="container mx-auto max-w-7xl">
+                         <div className="flex flex-col lg:flex-row gap-12 items-start">
                             
-                            {/* LEFT: FORM */}
-                            <div className="w-full md:w-1/2 z-10">
+                            {/* LEFT: FORM (1/3 Width) */}
+                            <div className="w-full lg:w-1/3 z-10 shrink-0">
                                 <span className="text-studio-blueprint text-[10px] uppercase tracking-widest font-black mb-4 block">Interactive Demo</span>
-                                <h2 className="font-serif text-5xl italic mb-8">Test the Engine.</h2>
-                                <p className="text-sm opacity-60 mb-10 leading-relaxed">Experience a fraction of Keystone's power. Generate a conceptual visualization in real-time.</p>
+                                <h2 className="font-serif text-5xl italic mb-6">Test the Engine.</h2>
+                                <p className="text-sm opacity-60 mb-8 leading-relaxed">Input precise site and structural parameters. Our neural engine generates a side-by-side 3D render and schematic floor plan instantly.</p>
                                 
-                                <form onSubmit={handleGenSubmit} className="space-y-6 bg-white p-8 shadow-xl border border-studio-slate/5">
+                                <form onSubmit={handleGenSubmit} className="space-y-5 bg-white p-8 shadow-xl border border-studio-slate/5">
+                                    {/* 1. Location */}
                                     <div>
-                                        <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Architectural Style</label>
-                                        <select 
-                                            className="w-full bg-studio-eggshell border-none p-4 text-sm"
-                                            value={formData.style}
-                                            onChange={(e) => setFormData({...formData, style: e.target.value})}
-                                        >
-                                            <option value="Modern Minimalist">Modern Minimalist</option>
-                                            <option value="Industrial Loft">Industrial Loft</option>
-                                            <option value="Scandinavian">Scandinavian</option>
-                                            <option value="Rustic Cabin">Rustic Cabin</option>
-                                            <option value="Brutalist">Brutalist Concrete</option>
-                                            <option value="Futuristic Organic">Futuristic Organic</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Environment</label>
-                                        <select 
+                                        <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Geographic Location</label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="e.g. Austin, Texas or Aspen, Colorado"
                                             className="w-full bg-studio-eggshell border-none p-4 text-sm"
                                             value={formData.location}
                                             onChange={(e) => setFormData({...formData, location: e.target.value})}
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* 2. Specs Grid */}
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div>
+                                            <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Stories</label>
+                                            <select className="w-full bg-studio-eggshell border-none p-3 text-xs" value={formData.stories} onChange={(e) => setFormData({...formData, stories: e.target.value})}>
+                                                <option>1 Story</option>
+                                                <option>2 Stories</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Beds</label>
+                                            <select className="w-full bg-studio-eggshell border-none p-3 text-xs" value={formData.bedrooms} onChange={(e) => setFormData({...formData, bedrooms: e.target.value})}>
+                                                {[1,2,3,4,5].map(n => <option key={n}>{n} Bed</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Baths</label>
+                                            <select className="w-full bg-studio-eggshell border-none p-3 text-xs" value={formData.bathrooms} onChange={(e) => setFormData({...formData, bathrooms: e.target.value})}>
+                                                {[1,2,3,4,5].map(n => <option key={n}>{n} Bath</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* 3. Architectural Materials/Style */}
+                                    <div>
+                                        <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Structural Materials</label>
+                                        <select 
+                                            className="w-full bg-studio-eggshell border-none p-4 text-sm"
+                                            value={formData.materials}
+                                            onChange={(e) => setFormData({...formData, materials: e.target.value})}
                                         >
-                                            <option value="Cliffside overlooking ocean">Cliffside (Ocean View)</option>
-                                            <option value="Deep Forest">Deep Forest</option>
-                                            <option value="Urban City Center">Urban City Center</option>
-                                            <option value="Snowy Mountain">Snowy Mountain</option>
-                                            <option value="Desert Oasis">Desert Oasis</option>
+                                            <option value="Wood Framing with Natural Finishes">Wood Framing & Natural</option>
+                                            <option value="Exposed Concrete & Brutalist">Exposed Concrete</option>
+                                            <option value="Glass, Steel & Modern">Glass & Steel</option>
+                                            <option value="Brick, Stone & Traditional">Brick & Stone</option>
+                                            <option value="Sustainable Bamboo & Eco-Materials">Eco-Friendly Bamboo</option>
                                         </select>
                                     </div>
+
+                                    {/* 4. Lot Size */}
                                     <div>
-                                        <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Key Feature (Optional)</label>
+                                        <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Lot Size</label>
                                         <input 
                                             type="text" 
-                                            placeholder="e.g. Infinity pool, floor-to-ceiling glass"
+                                            placeholder="e.g. 0.5 acres, 5000 sqft"
                                             className="w-full bg-studio-eggshell border-none p-4 text-sm"
+                                            value={formData.lotSize}
+                                            onChange={(e) => setFormData({...formData, lotSize: e.target.value})}
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* 5. Additional Features */}
+                                    <div>
+                                        <label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Special Features & Backyard</label>
+                                        <textarea 
+                                            rows="2"
+                                            placeholder="e.g. Wrap-around porch, infinity pool, large central courtyard..."
+                                            className="w-full bg-studio-eggshell border-none p-4 text-sm resize-none"
                                             value={formData.features}
                                             onChange={(e) => setFormData({...formData, features: e.target.value})}
-                                        />
+                                        ></textarea>
                                     </div>
 
                                     <button 
@@ -271,14 +312,14 @@
                                         disabled={status === 'loading'}
                                         className="w-full py-4 bg-studio-slate text-white uppercase tracking-[0.4em] text-[10px] font-bold hover:bg-studio-blueprint transition-all disabled:opacity-50"
                                     >
-                                        {status === 'loading' ? 'Synthesizing...' : 'Generate Concept'}
+                                        {status === 'loading' ? 'Synthesizing Concept...' : 'Generate Architectural Plan'}
                                     </button>
                                     {status === 'error' && <p className="text-red-500 text-xs mt-2 text-center">Connection failed. Please try again.</p>}
                                 </form>
                             </div>
 
-                            {/* RIGHT: RESULT DISPLAY */}
-                            <div className="w-full md:w-1/2 aspect-square bg-white shadow-2xl flex items-center justify-center relative overflow-hidden border border-studio-slate/5">
+                            {/* RIGHT: RESULT DISPLAY (2/3 Width, Wide Aspect Ratio) */}
+                            <div className="w-full lg:w-2/3 aspect-[4/3] md:aspect-[16/7] bg-white shadow-2xl flex items-center justify-center relative overflow-hidden border border-studio-slate/5">
                                 {status === 'idle' && (
                                     <div className="text-center opacity-20">
                                         <div className="font-serif italic text-4xl mb-2">Awaiting Input</div>
@@ -293,19 +334,27 @@
                                             animate={{ rotate: 360 }}
                                             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                                         />
-                                        <p className="text-[9px] uppercase tracking-widest animate-pulse">Dreaming...</p>
+                                        <p className="text-[9px] uppercase tracking-widest animate-pulse">Drafting Layout & Renders...</p>
                                     </div>
                                 )}
 
                                 {status === 'success' && result && (
                                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative w-full h-full group">
                                         {result.image ? (
-                                            <img src={`data:image/png;base64,${result.image}`} className="w-full h-full object-cover" />
+                                            <img src={`data:image/png;base64,${result.image}`} className="w-full h-full object-cover" alt="Generated Concept" />
                                         ) : (
-                                             <div className="p-10 text-center"><p>Prompt Generated (Image quota limit):</p><p className="text-xs mt-2">{result.prompt}</p></div>
+                                             <div className="p-10 text-center flex flex-col items-center justify-center h-full">
+                                                <p className="text-sm font-bold uppercase tracking-widest text-studio-blueprint mb-4">Prompt Generated Successfully</p>
+                                                <p className="text-xs opacity-70 max-w-lg leading-relaxed">{result.prompt}</p>
+                                             </div>
                                         )}
-                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-8 text-center text-white">
-                                            <p className="font-serif italic text-lg">{result.prompt}</p>
+                                        
+                                        {/* Hover Overlay showing the prompt */}
+                                        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-12 text-center text-white backdrop-blur-sm">
+                                            <div>
+                                                <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-studio-blueprint mb-4">Architectural Prompt Executed</p>
+                                                <p className="font-serif italic text-sm md:text-lg leading-relaxed">{result.prompt}</p>
+                                            </div>
                                         </div>
                                     </motion.div>
                                 )}
@@ -315,8 +364,7 @@
                     </div>
                 </section>
             );
-        };
-        const App = () => {
+        };        const App = () => {
             const [loading, setLoading] = useState(true);
             const [isModalOpen, setModalOpen] = useState(false);
             const [count, setCount] = useState(0);
