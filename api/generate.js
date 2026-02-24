@@ -16,7 +16,16 @@ export default async function handler(req, res) {
 
   try {
     console.log("STEP 1: /api/generate hit");
-
+// --- ADD THIS PASSKEY SECURITY CHECK ---
+    const passkey = req.body?.passkey;
+    const validKeysString = process.env.VALID_PASSKEYS || "KEYSTONE-BETA";
+    const validKeys = validKeysString.split(",").map(k => k.trim());
+    
+    if (!validKeys.includes(passkey)) {
+      console.log("Unauthorized attempt with passkey:", passkey);
+      return res.status(401).json({ success: false, message: "Unauthorized: Invalid Passkey" });
+    }
+    // ---------------------------------------
     const apiKey = process.env.GOOGLE_API_KEY;
     if (!apiKey) {
       console.log("STEP 1b: Missing GOOGLE_API_KEY");
@@ -96,3 +105,4 @@ Output ONLY the final image generation prompt text. Do not include any conversat
     return res.status(500).json({ success: false, message: err?.message || "Server error" });
   }
 }
+
