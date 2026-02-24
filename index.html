@@ -184,9 +184,7 @@
 // --- NEW COMPONENT: AI GENERATOR (Intelligence + Lead Capture Modal) ---
 const DesignGenerator = () => {
     // --- CONFIGURATION ---
-    // The original Waitlist Form URL
     const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeGuYIMrOkuJopGDt-TqRkqVeYrhRE7kIOrWGxEEvz1s4F9NA/formResponse";
-    // The specific Entry ID for the "Personal Email" field you added
     const ENTRY_ID_LEAD_EMAIL = "entry.1597309935"; 
     // ---------------------
 
@@ -221,26 +219,31 @@ const DesignGenerator = () => {
 
     const saveToHistory = (newResult, type) => {
         const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        const updated = [{ ...newResult, id: Date.now(), type, timestamp }, ...history].slice(0, 6);
+        // Ensure we save the brief if it exists
+        const historyItem = { 
+            id: Date.now(), 
+            watermarkedImage: newResult.watermarkedImage, 
+            previewImage: newResult.previewImage,
+            brief: newResult.brief, 
+            type, 
+            timestamp 
+        };
+        const updated = [historyItem, ...history].slice(0, 6);
         setHistory(updated);
         localStorage.setItem('keystone_history', JSON.stringify(updated));
     };
 
-    // Helper: Watermark & Resize
     const processImage = (base64Image, quality = 'high') => {
         return new Promise((resolve) => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = new Image();
             img.onload = () => {
-                // High Res = Original Size, Low Res = 480px width
                 const scale = quality === 'high' ? 1 : (480 / img.width);
                 canvas.width = img.width * scale;
                 canvas.height = img.height * scale;
-                
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 
-                // Add Watermark
                 const barHeight = Math.max(quality === 'high' ? 60 : 30, canvas.height * 0.08);
                 ctx.fillStyle = 'rgba(44, 44, 46, 0.85)';
                 ctx.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
@@ -294,38 +297,24 @@ const DesignGenerator = () => {
     const handleGenSubmit = (e) => { e.preventDefault(); setStatus('loading'); setResult(null); runGeneration({ surveyData: formData, passkey: passkeyInput }, 'New'); };
     const handleRefinementSubmit = (e) => { e.preventDefault(); setIsRefining(true); runGeneration({ surveyData: formData, passkey: passkeyInput, refinementInput: refinementText }, 'Refined'); };
 
-    // Handle "Get Full Quality" -> Submit Form -> Download
     const handleLeadSubmit = async (e) => {
         e.preventDefault();
         setIsSubmittingLead(true);
-
         const data = new URLSearchParams();
-        data.append(ENTRY_ID_LEAD_EMAIL, leadEmail); // Using the ID you provided
+        data.append(ENTRY_ID_LEAD_EMAIL, leadEmail); 
 
         try {
-            // Submit to Google Form
-            await fetch(GOOGLE_FORM_ACTION_URL, { 
-                method: "POST", 
-                mode: "no-cors", 
-                headers: { "Content-Type": "application/x-www-form-urlencoded" }, 
-                body: data.toString() 
-            });
-            
-            // Download Logic
+            await fetch(GOOGLE_FORM_ACTION_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: data.toString() });
             const link = document.createElement('a');
             link.href = result.watermarkedImage;
             link.download = `Keystone_HighRes_${Date.now()}.png`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
             setShowLeadModal(false);
             setLeadEmail('');
-        } catch (err) { 
-            alert("Connection error. Please try again."); 
-        } finally { 
-            setIsSubmittingLead(false); 
-        }
+        } catch (err) { alert("Connection error. Please try again."); } 
+        finally { setIsSubmittingLead(false); }
     };
 
     return (
@@ -338,12 +327,10 @@ const DesignGenerator = () => {
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-studio-slate/60 backdrop-blur-sm">
                             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-white p-8 max-w-md w-full shadow-2xl relative">
                                 <button onClick={() => setShowLeadModal(false)} className="absolute top-4 right-4 text-2xl font-light">×</button>
-                                
                                 <div className="text-center mb-6">
                                     <h3 className="font-serif text-2xl italic mb-2">Unlock Commercial License.</h3>
                                     <p className="text-xs opacity-60">Enter your email to instantly download the HD Commercial Render (2048px).</p>
                                 </div>
-                                
                                 <form onSubmit={handleLeadSubmit} className="space-y-4">
                                     <div>
                                         <label className="text-[9px] uppercase tracking-widest font-bold opacity-50 block mb-1">Email Address</label>
@@ -353,9 +340,7 @@ const DesignGenerator = () => {
                                         {isSubmittingLead ? 'Processing...' : 'Download High-Res'}
                                     </button>
                                 </form>
-                                <div className="mt-4 text-[9px] text-center opacity-40 italic">
-                                    By downloading, you agree to our beta usage terms.
-                                </div>
+                                <div className="mt-4 text-[9px] text-center opacity-40 italic">By downloading, you agree to our beta usage terms.</div>
                             </motion.div>
                         </motion.div>
                     )}
@@ -752,6 +737,7 @@ const DesignGenerator = () => {
     </script>
 </body>
 </html>
+
 
 
 
