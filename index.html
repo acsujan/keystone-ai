@@ -741,7 +741,7 @@ const DesignGenerator = () => {
                                             { name: "Rhythm Bhattarai", role: "CTO", img: ASSETS.team.rhythm }
                                         ].map((member, i) => (
                                             <div key={i} className="text-center group">
-                                                <div className="aspect-[9/16] bg-studio-eggshell overflow-hidden mb-8 border border-studio-slate/5">
+                                                <div className="w-56 mx-auto aspect-[3/4] bg-studio-eggshell overflow-hidden mb-6 border border-studio-slate/5 shadow-sm">
                                                     <motion.img 
                                                         src={member.img} 
                                                         initial={{ filter: "grayscale(100%)" }}
@@ -751,8 +751,8 @@ const DesignGenerator = () => {
                                                         className="w-full h-full object-cover" 
                                                     />
                                                 </div>
-                                                <h3 className="font-serif text-3xl italic mb-1">{member.name}</h3>
-                                                <p className="text-studio-blueprint uppercase tracking-widest text-[9px] font-bold">{member.role}</p>
+                                                <h3 className="font-serif text-2xl italic mb-1">{member.name}</h3>
+                                                <p className="text-studio-blueprint uppercase tracking-widest text-[8px] font-bold">{member.role}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -775,6 +775,7 @@ const DesignGenerator = () => {
     </script>
 </body>
 </html>
+
 
 
 
