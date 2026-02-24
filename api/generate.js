@@ -30,7 +30,7 @@ export default async function handler(req, res) {
 
     const ai = new GoogleGenAI({ apiKey });
 
-    // 1. Construct the Intelligence Prompt
+    // 1. Intelligence Prompt
     let baseInstruction = `
 Act as a Senior Architectural Project Manager.
 You must output a strictly formatted JSON object containing two parts: an image generation prompt and a feasibility brief.
@@ -40,41 +40,47 @@ ${refinementInput ? `REFINEMENT REQUEST: "${refinementInput}"` : `USER REQUIREME
 
 INSTRUCTIONS:
 1. Analyze the location, size, and materials.
-2. Estimate a construction cost range (High/Low) based on 2025 US market rates for that specific location.
+2. Estimate a construction cost range (High/Low) based on 2025 US market rates.
 3. Estimate a construction timeline.
 4. List 3 key material recommendations.
 5. Create the image prompt for a side-by-side 3D Render (Left) and Floor Plan (Right).
 
-OUTPUT FORMAT (JSON ONLY):
+OUTPUT FORMAT (JSON ONLY - NO MARKDOWN):
 {
   "imagePrompt": "The detailed image generation prompt text...",
   "brief": {
     "costRange": "$X - $Y (Estimated)",
     "timeline": "X - Y Months",
     "materials": ["Material 1", "Material 2", "Material 3"],
-    "notes": "A short, professional note about site feasibility or zoning based on the location."
+    "notes": "Short feasibility note."
   }
 }
 `.trim();
 
-    // 2. Generate The Intelligence & Prompt
+    // 2. Generate
     const textResp = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: baseInstruction,
-      generationConfig: { responseMimeType: "application/json" } // Force JSON
     });
 
-    const rawText = textResp?.text || "{}";
+    // --- JSON CLEANUP FIX ---
+    let rawText = textResp?.text || "{}";
+    // Remove markdown code blocks if Gemini adds them
+    rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+    
     let parsedData;
     try {
         parsedData = JSON.parse(rawText);
     } catch (e) {
-        // Fallback if model didn't output perfect JSON
-        console.error("JSON Parse Error", e);
-        return res.status(500).json({ success: false, message: "Failed to generate project brief." });
+        console.error("JSON Parse Error:", e, "Raw Text:", rawText);
+        // Fallback so the app doesn't crash, just missing the brief
+        parsedData = { 
+            imagePrompt: `Architectural house in ${surveyData?.location || "modern style"}, side by side 3D render and floor plan.`,
+            brief: null 
+        };
     }
 
-    // 3. Generate The Image
+    // 3. Generate Image
     const imgResp = await ai.models.generateContent({
       model: "gemini-3-pro-image-preview",
       contents: parsedData.imagePrompt,
@@ -96,7 +102,7 @@ OUTPUT FORMAT (JSON ONLY):
     return res.status(200).json({
       success: true,
       prompt: parsedData.imagePrompt,
-      brief: parsedData.brief, // Return the intelligence data
+      brief: parsedData.brief, 
       image: imageBase64,
       mimeType,
       isRefined: !!refinementInput
