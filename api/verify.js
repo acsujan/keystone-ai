@@ -1,5 +1,4 @@
 export default function handler(req, res) {
-  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -8,14 +7,21 @@ export default function handler(req, res) {
 
   const { passkey } = req.body || {};
   
-  // We will check against an environment variable. 
-  // If it's not set, we default to "KEYSTONE-BETA" for safety.
-  const validKeysString = process.env.VALID_PASSKEYS || "KEYSTONE-BETA";
-  const validKeys = validKeysString.split(",").map(k => k.trim());
+  // 1. Define Basic Keys (from Env or default)
+  const basicString = process.env.VALID_PASSKEYS || "KEYSTONE-BETA";
+  const basicKeys = basicString.split(",").map(k => k.trim());
 
-  if (validKeys.includes(passkey)) {
-    return res.status(200).json({ success: true, message: "Access Granted" });
-  } else {
-    return res.status(401).json({ success: false, message: "Invalid Passkey" });
+  // 2. Define Premium Keys (from Env or default)
+  const premiumString = process.env.VALID_PASSKEYS_PREMIUM || "KEYSTONE-PRO";
+  const premiumKeys = premiumString.split(",").map(k => k.trim());
+
+  if (premiumKeys.includes(passkey)) {
+    return res.status(200).json({ success: true, tier: 'premium' });
+  } 
+  
+  if (basicKeys.includes(passkey)) {
+    return res.status(200).json({ success: true, tier: 'basic' });
   }
+
+  return res.status(401).json({ success: false, message: "Invalid Passkey" });
 }
