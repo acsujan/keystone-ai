@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- UPDATED: Added user-scalable=0 and viewport-fit=cover to make it feel like an app on mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
     <title>Keystone AI | Architectural Discovery Studio</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -15,7 +16,7 @@
 
     <style>
         :root { --eggshell: #F9F8F4; --slate: #2C2C2E; --blueprint: #5B7C99; --sage: #A3AD9A; }
-        body { background-color: var(--eggshell); color: var(--slate); font-family: 'Lato', sans-serif; overflow-x: hidden; margin: 0; }
+        body { background-color: var(--eggshell); color: var(--slate); font-family: 'Lato', sans-serif; overflow-x: hidden; margin: 0; -webkit-tap-highlight-color: transparent; }
         .font-serif { font-family: 'Playfair Display', serif; }
         .font-heading { font-family: 'Poppins', sans-serif; }
         
@@ -24,10 +25,14 @@
         
         .studio-glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(0,0,0,0.05); }
         
-        input, select, textarea { background: white !important; border: 1px solid rgba(0,0,0,0.1) !important; padding: 0.8rem !important; outline: none !important; width: 100%; font-size: 14px; }
+        /* UPDATED: Font size 16px on inputs prevents iOS from zooming in when you tap a box */
+        input, select, textarea { background: white !important; border: 1px solid rgba(0,0,0,0.1) !important; padding: 0.8rem !important; outline: none !important; width: 100%; font-size: 16px !important; }
         input:focus { border-color: var(--blueprint) !important; }
 
         html { scroll-behavior: smooth; }
+
+        /* UPDATED: Utilities for iPhone Safe Areas (Notch/Home Bar) */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
     </style>
 
     <script>
@@ -53,6 +58,78 @@
             phase2: ["images/7.jpeg", "images/8.jpeg", "images/9.jpeg", "images/10.jpeg", "images/11.jpeg", "images/12.jpeg", "images/13.jpeg", "images/14.jpeg"],
             phase3: ["images/15.jpeg", "images/16.jpeg", "images/17.jpeg", "images/18.jpeg", "images/19.jpeg", "images/20.jpeg"]
         };
+
+        // --- NEW COMPONENT: MOBILE BOTTOM NAVIGATION ---
+        const MobileNavBar = ({ onOpenMenu, onJoin }) => {
+            const scrollTo = (id) => {
+                const el = document.getElementById(id);
+                if(el) el.scrollIntoView({ behavior: 'smooth' });
+            };
+
+            return (
+                <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-studio-slate/10 z-[90] md:hidden pb-safe">
+                    <div className="grid grid-cols-5 h-16 items-center">
+                        <button onClick={() => scrollTo('hero')} className="flex flex-col items-center justify-center gap-1 text-studio-slate/60 hover:text-studio-blueprint active:scale-95 transition-all">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                            <span className="text-[8px] uppercase font-bold tracking-wider">Home</span>
+                        </button>
+                        <button onClick={() => scrollTo('generator')} className="flex flex-col items-center justify-center gap-1 text-studio-blueprint hover:text-studio-slate active:scale-95 transition-all">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                            <span className="text-[8px] uppercase font-bold tracking-wider">Demo</span>
+                        </button>
+                        
+                        {/* Center Action Button */}
+                        <div className="relative -top-5">
+                            <button onClick={onJoin} className="w-12 h-12 bg-studio-slate rounded-full flex items-center justify-center text-white shadow-lg shadow-studio-slate/40 active:scale-90 transition-transform">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                            </button>
+                        </div>
+
+                        <button onClick={() => scrollTo('pricing')} className="flex flex-col items-center justify-center gap-1 text-studio-slate/60 hover:text-studio-blueprint active:scale-95 transition-all">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span className="text-[8px] uppercase font-bold tracking-wider">Price</span>
+                        </button>
+                        <button onClick={onOpenMenu} className="flex flex-col items-center justify-center gap-1 text-studio-slate/60 hover:text-studio-blueprint active:scale-95 transition-all">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                            <span className="text-[8px] uppercase font-bold tracking-wider">Menu</span>
+                        </button>
+                    </div>
+                </div>
+            )
+        }
+
+        // --- NEW COMPONENT: MOBILE FULL MENU OVERLAY ---
+        const MobileMenuOverlay = ({ isOpen, onClose, onJoin }) => {
+            const handleLink = (id) => {
+                const el = document.getElementById(id);
+                if(el) el.scrollIntoView({ behavior: 'smooth' });
+                onClose();
+            };
+
+            return (
+                <AnimatePresence>
+                    {isOpen && (
+                        <motion.div initial={{ opacity: 0, y: "100%" }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: "100%" }} transition={{type: "spring", damping: 25, stiffness: 200}} className="fixed inset-0 z-[100] bg-studio-slate text-studio-eggshell flex flex-col pb-safe">
+                            <div className="flex justify-between items-center p-6 border-b border-white/10">
+                                <span className="font-serif italic text-xl">Menu</span>
+                                <button onClick={onClose} className="p-2 bg-white/10 rounded-full"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-6">
+                                <div className="space-y-6 text-2xl font-serif italic">
+                                    <button onClick={() => handleLink('about')} className="block w-full text-left">About Keystone</button>
+                                    <button onClick={() => handleLink('problem')} className="block w-full text-left">The Problem</button>
+                                    <button onClick={() => handleLink('workflow')} className="block w-full text-left">How It Works</button>
+                                    <button onClick={() => handleLink('team')} className="block w-full text-left">Our Team</button>
+                                </div>
+                                <div className="mt-auto pt-8 border-t border-white/10">
+                                    <button onClick={() => { onJoin(); onClose(); }} className="w-full py-4 bg-studio-blueprint text-white uppercase tracking-[0.3em] text-[10px] font-bold">Join Beta Queue</button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            )
+        }
 
         const JoinModal = ({ isOpen, onClose }) => {
             const [formData, setFormData] = React.useState({
@@ -117,7 +194,7 @@
                     {isOpen && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-studio-slate/40 backdrop-blur-md">
                             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-studio-eggshell w-full max-w-4xl shadow-2xl relative flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
-                                <button onClick={onClose} className="absolute top-4 right-4 text-3xl font-light z-10">×</button>
+                                <button onClick={onClose} className="absolute top-4 right-4 text-3xl font-light z-10 w-10 h-10 bg-white/50 rounded-full flex items-center justify-center">×</button>
                                 
                                 <div className="p-8 md:w-2/3 border-r border-studio-slate/5 overflow-y-auto">
                                     <h2 className="font-serif text-3xl italic mb-1">Join the Queue.</h2>
@@ -170,7 +247,7 @@
                                     )}
                                 </div>
 
-                                <div className="p-8 md:w-1/3 bg-studio-slate/5 flex flex-col items-center justify-center text-center">
+                                <div className="hidden md:flex p-8 w-1/3 bg-studio-slate/5 flex-col items-center justify-center text-center">
                                     <img src={ASSETS.qrCode} className="w-28 h-28 bg-white p-2 mb-4" alt="QR" />
                                     <h4 className="font-serif text-lg italic mb-2">Help Us Build.</h4>
                                     <p className="text-[9px] uppercase tracking-widest opacity-40 leading-relaxed">Scan to take our Qualtrics survey. We would love your input in improving our service as we build our MVP.</p>
@@ -181,15 +258,13 @@
                 </AnimatePresence>
             );
         };
-// --- NEW COMPONENT: AI GENERATOR (Premium Tiers + History Fix + 1080p) ---
-const DesignGenerator = () => {
-    // --- CONFIGURATION ---
+
+        const DesignGenerator = () => {
     const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeGuYIMrOkuJopGDt-TqRkqVeYrhRE7kIOrWGxEEvz1s4F9NA/formResponse";
     const ENTRY_ID_LEAD_EMAIL = "entry.1597309935"; 
-    // ---------------------
 
     const [isUnlocked, setIsUnlocked] = useState(false);
-    const [userTier, setUserTier] = useState('basic'); // 'basic' or 'premium'
+    const [userTier, setUserTier] = useState('basic'); 
     const [passkeyInput, setPasskeyInput] = useState('');
     const [unlockStatus, setUnlockStatus] = useState('idle'); 
 
@@ -203,12 +278,10 @@ const DesignGenerator = () => {
     const [result, setResult] = useState(null);
     const [history, setHistory] = useState([]);
 
-    // Refinement States
     const [refinementText, setRefinementText] = useState('');
     const [isRefining, setIsRefining] = useState(false);
     const [showRefineInput, setShowRefineInput] = useState(false);
 
-    // Lead Capture States
     const [showLeadModal, setShowLeadModal] = useState(false);
     const [leadEmail, setLeadEmail] = useState('');
     const [isSubmittingLead, setIsSubmittingLead] = useState(false);
@@ -220,20 +293,16 @@ const DesignGenerator = () => {
 
     const saveToHistory = (newResult, type) => {
         const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        
-        // --- BUG FIX: We must explicitly save every field needed for the UI ---
         const historyItem = { 
             id: Date.now(), 
             watermarkedImage: newResult.watermarkedImage, 
             previewImage: newResult.previewImage,
-            brief: newResult.brief, // Crucial for Estimate Card
-            refinementCount: newResult.refinementCount, // Crucial for Refine Button
+            brief: newResult.brief,
+            refinementCount: newResult.refinementCount,
             prompt: newResult.prompt,
             type, 
             timestamp 
         };
-        // ---------------------------------------------------------------------
-
         const updated = [historyItem, ...history].slice(0, 6);
         setHistory(updated);
         localStorage.setItem('keystone_history', JSON.stringify(updated));
@@ -245,24 +314,19 @@ const DesignGenerator = () => {
             const ctx = canvas.getContext('2d');
             const img = new Image();
             img.onload = () => {
-                // UPDATE: Low Res bumped to 1080p, High Res = Original
                 const scale = quality === 'high' ? 1 : (1080 / img.width);
                 canvas.width = img.width * scale;
                 canvas.height = img.height * scale;
-                
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                
                 const barHeight = Math.max(quality === 'high' ? 60 : 30, canvas.height * 0.08);
                 ctx.fillStyle = 'rgba(44, 44, 46, 0.85)';
                 ctx.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
-                
                 ctx.fillStyle = '#FFFFFF';
                 ctx.font = `italic ${Math.floor(barHeight * 0.4)}px "Playfair Display", serif`;
                 ctx.textBaseline = 'middle';
                 const textX = barHeight + (quality === 'high' ? 20 : 10);
                 const textY = canvas.height - (barHeight / 2);
                 ctx.fillText('Property of Keystone AI', textX, textY);
-                
                 resolve(canvas.toDataURL('image/png'));
             };
             img.src = base64Image.startsWith('data:') ? base64Image : `data:image/png;base64,${base64Image}`;
@@ -275,14 +339,11 @@ const DesignGenerator = () => {
         try {
             const response = await fetch('/api/verify', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ passkey: passkeyInput }) });
             const data = await response.json();
-            
             if (data.success) { 
                 setIsUnlocked(true); 
-                setUserTier(data.tier || 'basic'); // Set Tier
+                setUserTier(data.tier || 'basic');
                 setUnlockStatus('idle'); 
-            } else { 
-                setUnlockStatus('error'); 
-            }
+            } else { setUnlockStatus('error'); }
         } catch { setUnlockStatus('error'); }
     };
 
@@ -291,11 +352,9 @@ const DesignGenerator = () => {
             const response = await fetch('/api/generate', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
             const data = await response.json();
             if (!data.success) throw new Error(data.message);
-
             if (data.image) {
                 const watermarkedHigh = await processImage(data.image, 'high');
                 const watermarkedLow = await processImage(data.image, 'low');
-                
                 const finalResult = { 
                     ...data, 
                     watermarkedImage: watermarkedHigh, 
@@ -313,7 +372,6 @@ const DesignGenerator = () => {
     const handleGenSubmit = (e) => { e.preventDefault(); setStatus('loading'); setResult(null); runGeneration({ surveyData: formData, passkey: passkeyInput }, 'New'); };
     const handleRefinementSubmit = (e) => { e.preventDefault(); setIsRefining(true); runGeneration({ surveyData: formData, passkey: passkeyInput, refinementInput: refinementText }, 'Refined'); };
 
-    // Function to download image directly
     const downloadImage = (url, name) => {
         const link = document.createElement('a');
         link.href = url;
@@ -323,15 +381,9 @@ const DesignGenerator = () => {
         document.body.removeChild(link);
     };
 
-    // Handle "Get Full Quality" click
     const handleHighResClick = () => {
-        if (userTier === 'premium') {
-            // Premium: Download Immediately
-            downloadImage(result.watermarkedImage, `Keystone_Premium_${Date.now()}.png`);
-        } else {
-            // Basic: Open Email Modal
-            setShowLeadModal(true);
-        }
+        if (userTier === 'premium') { downloadImage(result.watermarkedImage, `Keystone_Premium_${Date.now()}.png`); } 
+        else { setShowLeadModal(true); }
     };
 
     const handleLeadSubmit = async (e) => {
@@ -339,7 +391,6 @@ const DesignGenerator = () => {
         setIsSubmittingLead(true);
         const data = new URLSearchParams();
         data.append(ENTRY_ID_LEAD_EMAIL, leadEmail); 
-
         try {
             await fetch(GOOGLE_FORM_ACTION_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: data.toString() });
             downloadImage(result.watermarkedImage, `Keystone_HighRes_${Date.now()}.png`);
@@ -350,10 +401,8 @@ const DesignGenerator = () => {
     };
 
     return (
-        <section id="generator" className="py-32 px-10 bg-studio-eggshell relative overflow-hidden">
+        <section id="generator" className="py-20 md:py-32 px-6 md:px-10 bg-studio-eggshell relative overflow-hidden">
             <div className="container mx-auto max-w-7xl relative">
-                
-                {/* LEAD COLLECTION MODAL */}
                 <AnimatePresence>
                     {showLeadModal && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-studio-slate/60 backdrop-blur-sm">
@@ -364,36 +413,24 @@ const DesignGenerator = () => {
                                     <p className="text-xs opacity-60">Enter your email to instantly download the HD Commercial Render (2048px).</p>
                                 </div>
                                 <form onSubmit={handleLeadSubmit} className="space-y-4">
-                                    <div>
-                                        <label className="text-[9px] uppercase tracking-widest font-bold opacity-50 block mb-1">Email Address</label>
-                                        <input type="email" required value={leadEmail} onChange={(e) => setLeadEmail(e.target.value)} className="w-full border p-3" />
-                                    </div>
-                                    <button type="submit" disabled={isSubmittingLead} className="w-full bg-studio-blueprint text-white py-4 uppercase text-[10px] font-bold tracking-widest hover:bg-studio-slate mt-2 transition-colors">
-                                        {isSubmittingLead ? 'Processing...' : 'Download High-Res'}
-                                    </button>
+                                    <div><label className="text-[9px] uppercase tracking-widest font-bold opacity-50 block mb-1">Email Address</label><input type="email" required value={leadEmail} onChange={(e) => setLeadEmail(e.target.value)} className="w-full border p-3" /></div>
+                                    <button type="submit" disabled={isSubmittingLead} className="w-full bg-studio-blueprint text-white py-4 uppercase text-[10px] font-bold tracking-widest hover:bg-studio-slate mt-2 transition-colors">{isSubmittingLead ? 'Processing...' : 'Download High-Res'}</button>
                                 </form>
-                                <div className="mt-4 text-[9px] text-center opacity-40 italic">By downloading, you agree to our beta usage terms.</div>
                             </motion.div>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* PASSKEY LOCK SCREEN */}
                 <AnimatePresence>
                     {!isUnlocked && (
                          <motion.div initial={{ opacity: 1 }} exit={{ opacity: 0, y: -50 }} className="absolute inset-0 z-50 flex items-center justify-center bg-studio-eggshell/90 backdrop-blur-md border border-studio-slate/10 shadow-2xl">
-                             <div className="bg-white p-12 text-center max-w-md w-full shadow-2xl border border-studio-slate/5">
-                                 <div className="w-12 h-12 bg-studio-slate text-white flex items-center justify-center rounded-full mx-auto mb-6">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                                 </div>
+                             <div className="bg-white p-8 md:p-12 text-center max-w-md w-full shadow-2xl border border-studio-slate/5 mx-4">
+                                 <div className="w-12 h-12 bg-studio-slate text-white flex items-center justify-center rounded-full mx-auto mb-6"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg></div>
                                  <h3 className="font-serif text-3xl italic mb-2">Restricted Access.</h3>
                                  <p className="text-[10px] uppercase tracking-widest text-studio-blueprint font-bold mb-4">Private Beta Members Only</p>
-                                 <p className="text-xs opacity-60 mb-8 leading-relaxed italic">Join the queue to try the demo feature and we will send you the pass key to access this engine.</p>
                                  <form onSubmit={handleUnlock}>
                                      <input type="password" placeholder="Enter your beta passkey" className="w-full bg-studio-eggshell border-none p-4 text-center tracking-[0.2em] text-sm mb-4 outline-none focus:ring-2 focus:ring-studio-blueprint" value={passkeyInput} onChange={(e) => setPasskeyInput(e.target.value)} required />
-                                     <button type="submit" disabled={unlockStatus === 'loading'} className="w-full py-4 bg-studio-slate text-white uppercase tracking-[0.4em] text-[10px] font-bold hover:bg-studio-blueprint transition-all disabled:opacity-50">
-                                         {unlockStatus === 'loading' ? 'Verifying...' : 'Unlock Engine'}
-                                     </button>
+                                     <button type="submit" disabled={unlockStatus === 'loading'} className="w-full py-4 bg-studio-slate text-white uppercase tracking-[0.4em] text-[10px] font-bold hover:bg-studio-blueprint transition-all disabled:opacity-50">{unlockStatus === 'loading' ? 'Verifying...' : 'Unlock Engine'}</button>
                                      {unlockStatus === 'error' && <p className="text-red-500 text-xs mt-4 animate-pulse">Invalid Passkey.</p>}
                                  </form>
                              </div>
@@ -402,18 +439,11 @@ const DesignGenerator = () => {
                 </AnimatePresence>
 
                 <div className={`flex flex-col lg:flex-row gap-12 items-start transition-all duration-700 ${!isUnlocked ? 'opacity-20 pointer-events-none blur-sm' : 'opacity-100'}`}>
-                    
-                    {/* FORM SIDE */}
                     <div className="w-full lg:w-1/3 z-10 shrink-0">
                         <span className="text-studio-blueprint text-[10px] uppercase tracking-widest font-black mb-4 block">Interactive Demo</span>
                         <h2 className="font-serif text-5xl italic mb-6">Test the Engine.</h2>
-                        <div className="flex items-center gap-2 mb-6">
-                            <span className={`px-2 py-1 text-[8px] uppercase tracking-widest font-bold border ${userTier === 'premium' ? 'border-amber-500 text-amber-600' : 'border-studio-slate/20 text-studio-slate/50'}`}>
-                                {userTier === 'premium' ? 'Premium Unlocked' : 'Standard Access'}
-                            </span>
-                        </div>
-                        
-                        <form onSubmit={handleGenSubmit} className="space-y-5 bg-white p-8 shadow-xl border border-studio-slate/5">
+                        <div className="flex items-center gap-2 mb-6"><span className={`px-2 py-1 text-[8px] uppercase tracking-widest font-bold border ${userTier === 'premium' ? 'border-amber-500 text-amber-600' : 'border-studio-slate/20 text-studio-slate/50'}`}>{userTier === 'premium' ? 'Premium Unlocked' : 'Standard Access'}</span></div>
+                        <form onSubmit={handleGenSubmit} className="space-y-5 bg-white p-6 md:p-8 shadow-xl border border-studio-slate/5">
                             <div><label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Geographic Location</label><input type="text" placeholder="e.g. Austin, Texas" className="w-full bg-studio-eggshell border-none p-4 text-sm" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} required /></div>
                             <div className="grid grid-cols-3 gap-3">
                                 <div><label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Stories</label><select className="w-full bg-studio-eggshell border-none p-3 text-xs" value={formData.stories} onChange={(e) => setFormData({...formData, stories: e.target.value})}><option>1 Story</option><option>2 Stories</option></select></div>
@@ -421,68 +451,39 @@ const DesignGenerator = () => {
                                 <div><label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Baths</label><select className="w-full bg-studio-eggshell border-none p-3 text-xs" value={formData.bathrooms} onChange={(e) => setFormData({...formData, bathrooms: e.target.value})}>{[1,2,3,4,5].map(n => <option key={n}>{n} Bath</option>)}</select></div>
                             </div>
                             <div><label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Structural Materials</label><select className="w-full bg-studio-eggshell border-none p-4 text-sm" value={formData.materials} onChange={(e) => setFormData({...formData, materials: e.target.value})}><option value="Wood Framing with Natural Finishes">Wood Framing & Natural</option><option value="Exposed Concrete & Brutalist">Exposed Concrete</option><option value="Glass, Steel & Modern">Glass & Steel</option><option value="Brick, Stone & Traditional">Brick & Stone</option><option value="Sustainable Bamboo & Eco-Materials">Eco-Friendly Bamboo</option></select></div>
-                            <div><label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Lot Size</label><input type="text" placeholder="e.g. 0.5 acres, 5000 sqft" className="w-full bg-studio-eggshell border-none p-4 text-sm" value={formData.lotSize} onChange={(e) => setFormData({...formData, lotSize: e.target.value})} required /></div>
-                            <div><label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Special Features & Backyard</label><textarea rows="2" placeholder="e.g. Wrap-around porch, infinity pool..." className="w-full bg-studio-eggshell border-none p-4 text-sm resize-none" value={formData.features} onChange={(e) => setFormData({...formData, features: e.target.value})}></textarea></div>
-                            <button type="submit" disabled={status === 'loading' || isRefining} className="w-full py-4 bg-studio-slate text-white uppercase tracking-[0.4em] text-[10px] font-bold hover:bg-studio-blueprint transition-all disabled:opacity-50">
-                                {status === 'loading' ? 'Synthesizing...' : 'Generate Architectural Plan'}
-                            </button>
+                            <div><label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Lot Size</label><input type="text" placeholder="e.g. 0.5 acres" className="w-full bg-studio-eggshell border-none p-4 text-sm" value={formData.lotSize} onChange={(e) => setFormData({...formData, lotSize: e.target.value})} required /></div>
+                            <div><label className="text-[8px] uppercase tracking-widest opacity-50 font-bold block mb-2">Special Features</label><textarea rows="2" placeholder="e.g. Wrap-around porch..." className="w-full bg-studio-eggshell border-none p-4 text-sm resize-none" value={formData.features} onChange={(e) => setFormData({...formData, features: e.target.value})}></textarea></div>
+                            <button type="submit" disabled={status === 'loading' || isRefining} className="w-full py-4 bg-studio-slate text-white uppercase tracking-[0.4em] text-[10px] font-bold hover:bg-studio-blueprint transition-all disabled:opacity-50">{status === 'loading' ? 'Synthesizing...' : 'Generate Architectural Plan'}</button>
                         </form>
                     </div>
 
-                    {/* RESULT SIDE */}
                     <div className="w-full lg:w-2/3 flex flex-col gap-6">
                         <div className="w-full aspect-[4/3] md:aspect-[16/7] bg-white shadow-2xl flex items-center justify-center relative overflow-hidden border border-studio-slate/5">
-                            {(status === 'idle' && !result) && (
-                                <div className="text-center opacity-20">
-                                    <div className="font-serif italic text-4xl mb-2">Awaiting Input</div>
-                                    <div className="text-[9px] uppercase tracking-widest">Neural Engine Standby</div>
-                                </div>
-                            )}
-                            {(status === 'loading' || isRefining) && (
-                                <div className="text-center z-10 bg-white/80 p-6 rounded-xl backdrop-blur-sm">
-                                    <motion.div className="w-16 h-16 border-4 border-studio-blueprint border-t-transparent rounded-full mx-auto mb-4" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} />
-                                    <p className="text-[9px] uppercase tracking-widest animate-pulse">{isRefining ? 'Refining Architecture...' : 'Drafting Layout & Renders...'}</p>
-                                </div>
-                            )}
-                            {result && result.watermarkedImage && (
-                                <motion.img initial={{ opacity: 0 }} animate={{ opacity: (isRefining ? 0.5 : 1) }} src={result.watermarkedImage} className="w-full h-full object-cover absolute inset-0" alt="Generated Concept" />
-                            )}
+                            {(status === 'idle' && !result) && (<div className="text-center opacity-20"><div className="font-serif italic text-4xl mb-2">Awaiting Input</div><div className="text-[9px] uppercase tracking-widest">Neural Engine Standby</div></div>)}
+                            {(status === 'loading' || isRefining) && (<div className="text-center z-10 bg-white/80 p-6 rounded-xl backdrop-blur-sm"><motion.div className="w-16 h-16 border-4 border-studio-blueprint border-t-transparent rounded-full mx-auto mb-4" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} /><p className="text-[9px] uppercase tracking-widest animate-pulse">{isRefining ? 'Refining Architecture...' : 'Drafting Layout & Renders...'}</p></div>)}
+                            {result && result.watermarkedImage && (<motion.img initial={{ opacity: 0 }} animate={{ opacity: (isRefining ? 0.5 : 1) }} src={result.watermarkedImage} className="w-full h-full object-cover absolute inset-0" alt="Generated Concept" />)}
                         </div>
 
-                        {/* FEASIBILITY CARD */}
                         {result && result.brief && (
                              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white border border-studio-slate/10 p-6 shadow-lg">
-                                 <div className="flex items-center justify-between mb-4 border-b border-studio-slate/5 pb-4">
-                                     <h4 className="font-serif text-2xl italic">Feasibility Intelligence</h4>
-                                     <span className="bg-studio-eggshell text-studio-slate text-[9px] px-2 py-1 uppercase tracking-widest font-bold">AI Estimate</span>
-                                 </div>
+                                 <div className="flex items-center justify-between mb-4 border-b border-studio-slate/5 pb-4"><h4 className="font-serif text-2xl italic">Feasibility Intelligence</h4><span className="bg-studio-eggshell text-studio-slate text-[9px] px-2 py-1 uppercase tracking-widest font-bold">AI Estimate</span></div>
                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
                                      <div><p className="text-[9px] uppercase tracking-widest text-studio-blueprint font-bold mb-1">Est. Construction Cost</p><p className="font-medium text-lg">{result.brief.costRange}</p></div>
                                      <div><p className="text-[9px] uppercase tracking-widest text-studio-blueprint font-bold mb-1">Est. Timeline</p><p className="font-medium text-lg">{result.brief.timeline}</p></div>
                                      <div><p className="text-[9px] uppercase tracking-widest text-studio-blueprint font-bold mb-1">Recommended Materials</p><p className="opacity-70">{result.brief.materials?.join(', ') || 'N/A'}</p></div>
                                  </div>
-                                 <div className="mt-4 pt-4 border-t border-studio-slate/5 text-xs text-studio-slate/40 italic">*Disclaimer: This is an AI-generated pre-feasibility estimate for conceptual budgeting only. Values are based on regional averages and do not constitute a formal bid. Consult a licensed contractor for accurate pricing.</div>
                              </motion.div>
                         )}
 
-                        {/* ACTION BAR */}
                         {result && result.watermarkedImage && (
                             <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                                 <div className="flex gap-2">
-                                    <a href={result.previewImage} download={`Keystone_Preview_1080p.png`} className="border border-studio-slate text-studio-slate px-4 py-3 uppercase tracking-[0.2em] text-[9px] font-bold hover:bg-studio-eggshell transition-colors">
-                                        Download Preview
-                                    </a>
-                                    <button onClick={handleHighResClick} className="bg-studio-blueprint text-white px-6 py-3 uppercase tracking-[0.2em] text-[9px] font-bold shadow-lg hover:bg-studio-slate transition-colors flex items-center gap-2">
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                        {userTier === 'premium' ? 'Instant HD Download' : 'Get Full Quality'}
-                                    </button>
+                                    <a href={result.previewImage} download={`Keystone_Preview_1080p.png`} className="border border-studio-slate text-studio-slate px-4 py-3 uppercase tracking-[0.2em] text-[9px] font-bold hover:bg-studio-eggshell transition-colors">Download Preview</a>
+                                    <button onClick={handleHighResClick} className="bg-studio-blueprint text-white px-6 py-3 uppercase tracking-[0.2em] text-[9px] font-bold shadow-lg hover:bg-studio-slate transition-colors flex items-center gap-2"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>{userTier === 'premium' ? 'Instant HD Download' : 'Get Full Quality'}</button>
                                 </div>
-
                                 <div className="w-full md:w-1/2">
                                     {!showRefineInput ? (
-                                        <button onClick={() => setShowRefineInput(true)} disabled={result.refinementCount >= 1} className="w-full py-3 border border-studio-slate text-studio-slate uppercase tracking-[0.3em] text-[10px] font-bold hover:bg-studio-slate hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed">
-                                            {result.refinementCount >= 1 ? 'Refinement Limit Reached (1/1)' : 'Make Adjustments (1 Credit)'}
-                                        </button>
+                                        <button onClick={() => setShowRefineInput(true)} disabled={result.refinementCount >= 1} className="w-full py-3 border border-studio-slate text-studio-slate uppercase tracking-[0.3em] text-[10px] font-bold hover:bg-studio-slate hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed">{result.refinementCount >= 1 ? 'Refinement Limit Reached (1/1)' : 'Make Adjustments (1 Credit)'}</button>
                                     ) : (
                                         <form onSubmit={handleRefinementSubmit} className="flex gap-2 animate-in fade-in slide-in-from-bottom-2">
                                             <input type="text" placeholder="e.g. Change wood to concrete..." className="flex-1 bg-white border p-3 text-xs outline-none focus:border-studio-blueprint" value={refinementText} onChange={(e) => setRefinementText(e.target.value)} autoFocus />
@@ -494,7 +495,6 @@ const DesignGenerator = () => {
                             </div>
                         )}
 
-                        {/* HISTORY */}
                         {history.length > 0 && (
                             <div className="mt-8 border-t border-studio-slate/10 pt-6">
                                 <p className="text-[9px] uppercase tracking-widest text-studio-blueprint font-bold mb-4">Your Recent Concepts</p>
@@ -514,9 +514,10 @@ const DesignGenerator = () => {
         </section>
     );
 };
-                const App = () => {
+        const App = () => {
             const [loading, setLoading] = useState(true);
             const [isModalOpen, setModalOpen] = useState(false);
+            const [isMenuOpen, setMenuOpen] = useState(false); // New state for mobile menu
             const [count, setCount] = useState(0);
 
             useEffect(() => {
@@ -535,7 +536,7 @@ const DesignGenerator = () => {
             const xTranslate = useTransform(scrollYProgress, [0, 0.1, 1], ["0%", "0%", "-75%"]);
 
             return (
-                <div className="selection:bg-studio-blueprint selection:text-white">
+                <div className="selection:bg-studio-blueprint selection:text-white pb-24 md:pb-0"> {/* Added pb-24 to prevent mobile nav overlap */}
                     <AnimatePresence>{loading && (
                         <motion.div className="fixed inset-0 z-[110] bg-studio-eggshell flex flex-col items-center justify-center" exit={{ opacity: 0 }}>
                             <motion.img src={ASSETS.watermark} className="w-20 mb-8 opacity-20" animate={{ rotateY: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
@@ -545,85 +546,67 @@ const DesignGenerator = () => {
                     )}</AnimatePresence>
 
                     <JoinModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
+                    
+                    {/* NEW: MOBILE NAV & MENU COMPONENTS */}
+                    <MobileNavBar onOpenMenu={() => setMenuOpen(true)} onJoin={() => setModalOpen(true)} />
+                    <MobileMenuOverlay isOpen={isMenuOpen} onClose={() => setMenuOpen(false)} onJoin={() => setModalOpen(true)} />
 
                     {!loading && (
                         <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                            <nav className="fixed top-0 w-full z-40 py-8 px-10 flex justify-between items-center bg-studio-eggshell/80 backdrop-blur-md border-b border-studio-slate/5">
+                            <nav className="fixed top-0 w-full z-40 py-8 px-6 md:px-10 flex justify-between items-center bg-studio-eggshell/80 backdrop-blur-md border-b border-studio-slate/5 pt-safe">
                                 <div className="flex items-center gap-4">
                                     <img src={ASSETS.watermark} className="w-6 h-6 opacity-60" />
                                     <span className="font-serif text-2xl italic font-bold tracking-tighter">Keystone</span>
                                 </div>
                                 <div className="hidden md:flex gap-8 text-[9px] uppercase tracking-[0.4em] font-bold text-studio-slate/60 items-center">
-    <a href="#about" className="hover:text-studio-blueprint transition-colors">About</a>
-    <a href="#problem" className="hover:text-studio-blueprint transition-colors">The Gap</a>
-    <a href="#workflow" className="hover:text-studio-blueprint transition-colors">Workflow</a>
-    <a href="#pricing" className="hover:text-studio-blueprint transition-colors">Pricing</a>
-    {/* NEW DEMO JUMP LINK */}
-    <a href="#generator" className="text-studio-blueprint border-b border-studio-blueprint pb-1 hover:text-studio-slate hover:border-studio-slate transition-all">Try Demo</a>
-    
-    <button onClick={() => setModalOpen(true)} className="px-5 py-2 border border-studio-slate/20 rounded-full hover:bg-studio-slate hover:text-white transition-all ml-4">Join Queue</button>
-</div>
+                                    <a href="#about" className="hover:text-studio-blueprint transition-colors">About</a>
+                                    <a href="#problem" className="hover:text-studio-blueprint transition-colors">The Gap</a>
+                                    <a href="#workflow" className="hover:text-studio-blueprint transition-colors">Workflow</a>
+                                    <a href="#pricing" className="hover:text-studio-blueprint transition-colors">Pricing</a>
+                                    <a href="#generator" className="text-studio-blueprint border-b border-studio-blueprint pb-1 hover:text-studio-slate hover:border-studio-slate transition-all">Try Demo</a>
+                                    <button onClick={() => setModalOpen(true)} className="px-5 py-2 border border-studio-slate/20 rounded-full hover:bg-studio-slate hover:text-white transition-all ml-4">Join Queue</button>
+                                </div>
                             </nav>
 
-                           {/* HERO (No Video, Elegant Studio Setup) */}
-    <section className="h-screen relative flex items-center justify-center overflow-hidden bg-studio-eggshell">
-        <motion.img 
-            src={ASSETS.watermark} 
-            className="absolute inset-0 m-auto w-[90vh] opacity-[0.03] pointer-events-none" 
-            animate={{ rotate: 360 }} 
-            transition={{ duration: 200, repeat: Infinity, ease: "linear" }}
-        />
-        <div className="relative z-10 text-center px-6 mt-16">
-            <h1 className="font-serif text-[13vw] md:text-[10vw] leading-[0.85] italic text-studio-slate">Design<br/>Instantly.</h1>
-            <p className="mt-10 uppercase tracking-[0.6em] text-[10px] font-bold text-studio-blueprint">The AI Platform for Professional Architects</p>
-        </div>
-    </section>
-
-    {/* --- NEW ABOUT / MVP SECTION --- */}
-    <section id="about" className="py-32 px-10 bg-studio-slate text-studio-eggshell">
-        <div className="container mx-auto max-w-4xl text-center">
-            <span className="text-studio-blueprint text-[10px] uppercase tracking-widest font-black mb-6 block">Proof of Concept</span>
-            <h2 className="font-serif text-5xl md:text-6xl italic mb-10">Building the MVP.</h2>
-            
-            <div className="space-y-6 text-lg font-light leading-relaxed opacity-80">
-                <p>
-                    The architectural industry relies heavily on early-stage visualization, yet firms spend countless unbillable hours trying to decode a client's imagination. <strong className="font-bold text-white">Keystone AI</strong> is being built to bridge this gap—empowering clients to generate preliminary visual concepts within a firm's specific design parameters before the very first meeting.
-                </p>
-                
-                <div className="my-10 p-8 border border-studio-blueprint/30 bg-studio-eggshell/5 relative">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-studio-slate px-4 text-[9px] uppercase tracking-widest text-studio-blueprint font-bold">Disclaimer</div>
-                    <p className="italic text-base text-white">
-                        "We are currently in the active development phase of our Minimum Viable Product (MVP). The images generated in our current demo represent a proof of concept and do not fully reflect the exact quality, rendering style, or technical precision of our final product."
-                    </p>
-                </div>
-                
-                <p>
-                    We are building this tool <strong className="font-bold text-white">for</strong> architects, <strong className="font-bold text-white">with</strong> architects. We would love your input, ideas, and feedback to help us make this product better for your daily workflow.
-                </p>
-                
-                <button onClick={() => setModalOpen(true)} className="mt-10 px-8 py-4 bg-studio-blueprint text-white uppercase tracking-[0.3em] text-[10px] font-bold hover:bg-white hover:text-studio-slate transition-all shadow-lg">
-                    Share Your Input & Join Queue
-                </button>
-            </div>
-        </div>
-    </section>
-    {/* ----------------------------------- */}
-
-
-                            {/* PROBLEM SECTION */}
-                            <section id="problem" className="py-32 px-10 bg-white">
-                                <div className="container mx-auto max-w-4xl text-center">
-                                    <span className="text-studio-blueprint text-[10px] uppercase tracking-widest font-black mb-6 block">The $2,000 Hole</span>
-                                    <h2 className="font-serif text-6xl italic mb-10">Stop "Mind-Reading" Your Clients.</h2>
-                                    <p className="text-xl font-light leading-relaxed opacity-70">
-                                        Architects lose an average of <strong className="font-bold">10-15 hours</strong> per project on unbillable discovery calls and sketch revisions. This is a profit drain that erodes margins before the real work begins. Keystone AI solves this by letting clients visualize their dreams within <strong className="font-bold">your</strong> design parameters, before the first meeting.
-                                    </p>
+                           {/* HERO */}
+                            <section id="hero" className="h-screen relative flex items-center justify-center overflow-hidden bg-studio-eggshell">
+                                <motion.img src={ASSETS.watermark} className="absolute inset-0 m-auto w-[90vh] opacity-[0.03] pointer-events-none" animate={{ rotate: 360 }} transition={{ duration: 200, repeat: Infinity, ease: "linear" }} />
+                                <div className="relative z-10 text-center px-6 mt-16">
+                                    <h1 className="font-serif text-[13vw] md:text-[10vw] leading-[0.85] italic text-studio-slate">Design<br/>Instantly.</h1>
+                                    <p className="mt-10 uppercase tracking-[0.6em] text-[10px] font-bold text-studio-blueprint">The AI Platform for Professional Architects</p>
                                 </div>
                             </section>
 
-                            {/* HORIZONTAL VISION ARCHIVE */}
-                            <section ref={scrollRef} id="vision" className="relative h-[400vh] bg-studio-eggshell">
-                                <div className="sticky top-0 flex h-screen items-center overflow-hidden">
+                            {/* ABOUT SECTION */}
+                            <section id="about" className="py-32 px-6 md:px-10 bg-studio-slate text-studio-eggshell">
+                                <div className="container mx-auto max-w-4xl text-center">
+                                    <span className="text-studio-blueprint text-[10px] uppercase tracking-widest font-black mb-6 block">Proof of Concept</span>
+                                    <h2 className="font-serif text-4xl md:text-6xl italic mb-10">Building the MVP.</h2>
+                                    <div className="space-y-6 text-lg font-light leading-relaxed opacity-80">
+                                        <p>The architectural industry relies heavily on early-stage visualization, yet firms spend countless unbillable hours trying to decode a client's imagination. <strong className="font-bold text-white">Keystone AI</strong> is being built to bridge this gap.</p>
+                                        <div className="my-10 p-8 border border-studio-blueprint/30 bg-studio-eggshell/5 relative">
+                                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-studio-slate px-4 text-[9px] uppercase tracking-widest text-studio-blueprint font-bold">Disclaimer</div>
+                                            <p className="italic text-base text-white">"We are currently in the active development phase of our Minimum Viable Product (MVP). The images generated in our current demo represent a proof of concept."</p>
+                                        </div>
+                                        <button onClick={() => setModalOpen(true)} className="mt-10 px-8 py-4 bg-studio-blueprint text-white uppercase tracking-[0.3em] text-[10px] font-bold hover:bg-white hover:text-studio-slate transition-all shadow-lg">Share Your Input & Join Queue</button>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* PROBLEM SECTION */}
+                            <section id="problem" className="py-32 px-6 md:px-10 bg-white">
+                                <div className="container mx-auto max-w-4xl text-center">
+                                    <span className="text-studio-blueprint text-[10px] uppercase tracking-widest font-black mb-6 block">The $2,000 Hole</span>
+                                    <h2 className="font-serif text-4xl md:text-6xl italic mb-10">Stop "Mind-Reading" Your Clients.</h2>
+                                    <p className="text-xl font-light leading-relaxed opacity-70">Architects lose an average of <strong className="font-bold">10-15 hours</strong> per project on unbillable discovery calls and sketch revisions.</p>
+                                </div>
+                            </section>
+
+                            {/* HORIZONTAL VISION ARCHIVE (DESKTOP) & VERTICAL STACK (MOBILE) */}
+                            {/* UPDATED: Changed height logic so mobile doesn't get stuck in a 400vh scroll container */}
+                            <section ref={scrollRef} id="vision" className="relative md:h-[400vh] h-auto bg-studio-eggshell">
+                                {/* DESKTOP: STICKY HORIZONTAL SCROLL */}
+                                <div className="hidden md:flex sticky top-0 h-screen items-center overflow-hidden">
                                     <motion.div style={{ x: xTranslate }} className="flex gap-20 px-24 items-center">
                                         <div className="min-w-[45vw] shrink-0">
                                             <span className="text-studio-blueprint text-[10px] uppercase tracking-widest font-black mb-4 block">Discovery Archive</span>
@@ -632,49 +615,45 @@ const DesignGenerator = () => {
                                         </div>
                                         {ASSETS.phase1.map((img, i) => (
                                             <div key={i} className="w-[45vh] aspect-[9/16] shrink-0 shadow-2xl bg-white p-2 group overflow-hidden">
-                                                <motion.img 
-                                                    src={img} 
-                                                    initial={{ filter: "grayscale(100%)" }}
-                                                    whileInView={{ filter: "grayscale(0%)" }}
-                                                    viewport={{ margin: "-10%" }}
-                                                    whileHover={{ filter: "grayscale(0%)", scale: 1.05 }}
-                                                    transition={{ duration: 0.8 }}
-                                                    className="w-full h-full object-cover" 
-                                                />
+                                                <motion.img src={img} initial={{ filter: "grayscale(100%)" }} whileInView={{ filter: "grayscale(0%)" }} viewport={{ margin: "-10%" }} whileHover={{ filter: "grayscale(0%)", scale: 1.05 }} transition={{ duration: 0.8 }} className="w-full h-full object-cover" />
                                             </div>
                                         ))}
                                     </motion.div>
                                 </div>
+                                {/* MOBILE: SIMPLE VERTICAL GRID */}
+                                <div className="md:hidden py-20 px-6">
+                                     <span className="text-studio-blueprint text-[10px] uppercase tracking-widest font-black mb-4 block">Discovery Archive</span>
+                                     <h2 className="font-serif text-5xl italic mb-8">The Neural Intake.</h2>
+                                     <div className="grid grid-cols-2 gap-4">
+                                         {ASSETS.phase1.slice(0, 4).map((img, i) => (
+                                            <div key={i} className="aspect-[9/16] bg-white p-1 shadow-md"><img src={img} className="w-full h-full object-cover" /></div>
+                                        ))}
+                                     </div>
+                                </div>
                             </section>
 
                             {/* PORTFOLIO GRID */}
-                            <section id="portfolio" className="py-32 px-10 bg-studio-slate text-studio-eggshell">
+                            <section id="portfolio" className="py-32 px-6 md:px-10 bg-studio-slate text-studio-eggshell">
                                 <div className="container mx-auto">
-                                    <h2 className="font-serif text-6xl italic mb-20 text-center">Neural Synthesis Outputs.</h2>
+                                    <h2 className="font-serif text-4xl md:text-6xl italic mb-20 text-center">Neural Synthesis Outputs.</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                         {ASSETS.phase2.map((img, i) => (
                                             <div key={i} className={`aspect-[9/16] overflow-hidden ${i % 2 !== 0 ? 'md:mt-12' : ''}`}>
-                                                <motion.img 
-                                                    src={img} 
-                                                    initial={{ filter: "grayscale(100%)" }}
-                                                    whileInView={{ filter: "grayscale(0%)" }}
-                                                    viewport={{ once: false, amount: 0.3 }}
-                                                    whileHover={{ filter: "grayscale(0%)", scale: 1.05 }}
-                                                    transition={{ duration: 0.8 }}
-                                                    className="w-full h-full object-cover" 
-                                                />
+                                                <motion.img src={img} initial={{ filter: "grayscale(100%)" }} whileInView={{ filter: "grayscale(0%)" }} viewport={{ once: false, amount: 0.3 }} whileHover={{ filter: "grayscale(0%)", scale: 1.05 }} transition={{ duration: 0.8 }} className="w-full h-full object-cover" />
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             </section>
-<DesignGenerator />
-                            {/* THE WORKFLOW */}
-                            <section id="workflow" className="py-32 px-10 bg-white">
+
+                            <DesignGenerator />
+
+                            {/* WORKFLOW */}
+                            <section id="workflow" className="py-32 px-6 md:px-10 bg-white">
                                 <div className="container mx-auto max-w-6xl">
                                     <div className="text-center mb-20">
                                         <span className="text-studio-blueprint text-[10px] uppercase tracking-widest font-black mb-4 block">The Studio Pipeline</span>
-                                        <h2 className="font-serif text-6xl italic">From Discovery to Billable Design.</h2>
+                                        <h2 className="font-serif text-4xl md:text-6xl italic">From Discovery to Billable Design.</h2>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
                                         {[
@@ -683,17 +662,7 @@ const DesignGenerator = () => {
                                             { title: "Expert Refinement", img: ASSETS.phase3[2], desc: "The client arrives at the first meeting with a solid visual starting point. Your first hour becomes a billable design session focused on expert refinement, not basic discovery." }
                                         ].map((item, i) => (
                                             <div key={i} className="group">
-                                                <div className="aspect-[9/16] mb-8 shadow-xl overflow-hidden bg-studio-eggshell">
-                                                    <motion.img 
-                                                        src={item.img} 
-                                                        initial={{ filter: "grayscale(100%)", scale: 1 }}
-                                                        whileInView={{ filter: "grayscale(0%)" }}
-                                                        viewport={{ once: false, amount: 0.5 }}
-                                                        whileHover={{ filter: "grayscale(0%)", scale: 1.05 }}
-                                                        transition={{ duration: 0.8 }}
-                                                        className="w-full h-full object-cover" 
-                                                    />
-                                                </div>
+                                                <div className="aspect-[9/16] mb-8 shadow-xl overflow-hidden bg-studio-eggshell"><motion.img src={item.img} initial={{ filter: "grayscale(100%)", scale: 1 }} whileInView={{ filter: "grayscale(0%)" }} viewport={{ once: false, amount: 0.5 }} whileHover={{ filter: "grayscale(0%)", scale: 1.05 }} transition={{ duration: 0.8 }} className="w-full h-full object-cover" /></div>
                                                 <h3 className="font-serif text-2xl italic mb-4">{i + 1}. {item.title}</h3>
                                                 <p className="text-sm opacity-60 leading-relaxed font-light">{item.desc}</p>
                                             </div>
@@ -703,10 +672,10 @@ const DesignGenerator = () => {
                             </section>
 
                             {/* PRICING */}
-                            <section id="pricing" className="py-32 px-10 bg-studio-eggshell">
+                            <section id="pricing" className="py-32 px-6 md:px-10 bg-studio-eggshell">
                                 <div className="container mx-auto max-w-5xl">
                                     <div className="text-center mb-20">
-                                        <h2 className="font-serif text-6xl italic">The Value Model.</h2>
+                                        <h2 className="font-serif text-4xl md:text-6xl italic">The Value Model.</h2>
                                         <p className="mt-4 uppercase tracking-[0.3em] text-[10px] opacity-50">Pay-As-You-Go Strategy</p>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -723,17 +692,13 @@ const DesignGenerator = () => {
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="mt-24 text-center max-w-2xl mx-auto">
-                                        <h4 className="font-serif text-2xl italic mb-4">Land & Expand</h4>
-                                        <p className="text-sm opacity-50 leading-relaxed italic">"Initial use is low-risk. As the value becomes clear, we grow with your project volume. Absolute transparency, absolute flexibility."</p>
-                                    </div>
                                 </div>
                             </section>
 
                             {/* TEAM */}
-                            <section id="team" className="py-32 px-10 bg-white">
+                            <section id="team" className="py-32 px-6 md:px-10 bg-white">
                                 <div className="container mx-auto max-w-6xl text-center">
-                                    <h2 className="font-serif text-6xl italic mb-24">The Minds.</h2>
+                                    <h2 className="font-serif text-4xl md:text-6xl italic mb-24">The Minds.</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
                                         {[
                                             { name: "Sujan Acharya", role: "CEO", img: ASSETS.team.sujan },
@@ -741,16 +706,7 @@ const DesignGenerator = () => {
                                             { name: "Rhythm Bhattarai", role: "CTO", img: ASSETS.team.rhythm }
                                         ].map((member, i) => (
                                             <div key={i} className="text-center group">
-                                                <div className="w-56 mx-auto aspect-[3/4] bg-studio-eggshell overflow-hidden mb-6 border border-studio-slate/5 shadow-sm">
-                                                    <motion.img 
-                                                        src={member.img} 
-                                                        initial={{ filter: "grayscale(100%)" }}
-                                                        whileInView={{ filter: "grayscale(0%)" }}
-                                                        whileHover={{ filter: "grayscale(0%)", scale: 1.05 }}
-                                                        transition={{ duration: 0.8 }}
-                                                        className="w-full h-full object-cover" 
-                                                    />
-                                                </div>
+                                                <div className="w-56 mx-auto aspect-[3/4] bg-studio-eggshell overflow-hidden mb-6 border border-studio-slate/5 shadow-sm"><motion.img src={member.img} initial={{ filter: "grayscale(100%)" }} whileInView={{ filter: "grayscale(0%)" }} whileHover={{ filter: "grayscale(0%)", scale: 1.05 }} transition={{ duration: 0.8 }} className="w-full h-full object-cover" /></div>
                                                 <h3 className="font-serif text-2xl italic mb-1">{member.name}</h3>
                                                 <p className="text-studio-blueprint uppercase tracking-widest text-[8px] font-bold">{member.role}</p>
                                             </div>
@@ -775,12 +731,3 @@ const DesignGenerator = () => {
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
