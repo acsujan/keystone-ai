@@ -28,22 +28,27 @@ export default async function handler(req, res) {
 
     const ai = new GoogleGenAI({ apiKey });
 
-    // --- USA COST LOGIC ---
+    // --- USA COST LOGIC (UPDATED FOR NARROW, SMART ESTIMATES) ---
     const locationStr = surveyData?.location || "";
     const isUSA = /usa|united states|america|us\b/i.test(locationStr);
     
     let pricingInstruction = "";
     if (isUSA && surveyData?.totalArea) {
         pricingInstruction = `
-        - Calculate estimate using base rate of $150 to $300 per sq ft for ${surveyData.totalArea} sq ft.
-        - Adjust rate based on material: ${surveyData.materials}.
-        - Formula: Cost = Area * Rate.
-        - Output "costRange" strictly as "$X - $Y".
+        - You are an expert US construction estimator.
+        - The user specified a Total Floor Area of ${surveyData.totalArea} sq ft in the specific location of: ${surveyData.location}.
+        - 1. Determine the accurate base cost-per-square-foot for THAT exact local market (e.g., suburban/rural areas are cheaper, major metros or coastal areas are premium).
+        - 2. Adjust this base rate based on the structural materials: ${surveyData.materials} (Wood framing is standard/cheaper; Exposed Concrete, Glass, and Steel are highly expensive).
+        - 3. Further adjust the rate based on the implied quality of finishes in the user's description (standard vs. luxury/custom).
+        - 4. Calculate the total cost: (Area * Final Adjusted Rate).
+        - 5. Provide a NARROW, highly realistic cost range (e.g., a 10% to 15% variance maximum, NOT a massive gap. Example: $425,000 - $475,000).
+        - Output the "costRange" strictly as "$X - $Y".
         `;
     } else {
         pricingInstruction = `
-        - Location is NOT USA or Area missing.
-        - Set "costRange" to null.
+        - The location is NOT clearly USA or Area is missing.
+        - Do NOT attempt to guess a price in dollars.
+        - Set "costRange" to "N/A - Location/Area Required".
         `;
     }
 
