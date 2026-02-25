@@ -28,57 +28,73 @@ export default async function handler(req, res) {
 
     const ai = new GoogleGenAI({ apiKey });
 
-    // --- NEW LOGIC START: USA & AREA CHECK ---
+    // --- USA COST LOGIC ---
     const locationStr = surveyData?.location || "";
     const isUSA = /usa|united states|america|us\b/i.test(locationStr);
     
     let pricingInstruction = "";
     if (isUSA && surveyData?.totalArea) {
         pricingInstruction = `
-        - This house is in the USA. 
-        - The user specified a Total Floor Area of ${surveyData.totalArea} sq ft.
-        - Calculate the estimate using a base rate of $150 to $300 per sq ft.
-        - Adjust the rate within that range based on the material: ${surveyData.materials} (e.g., Wood is cheaper, Concrete/Steel is expensive).
-        - Multiplier formula: Cost = Area * Rate.
-        - Output the "costRange" strictly as "$X - $Y".
+        - Calculate estimate using base rate of $150 to $300 per sq ft for ${surveyData.totalArea} sq ft.
+        - Adjust rate based on material: ${surveyData.materials}.
+        - Formula: Cost = Area * Rate.
+        - Output "costRange" strictly as "$X - $Y".
         `;
     } else {
         pricingInstruction = `
-        - The location is NOT clearly USA or Area is missing.
-        - Do NOT attempt to guess a price in dollars.
-        - Set "costRange" to null or empty string "".
+        - Location is NOT USA or Area missing.
+        - Set "costRange" to null.
         `;
     }
-    // --- NEW LOGIC END ---
 
-    // 1. Intelligence Prompt
+    // --- DYNAMIC FLOOR PLAN LOGIC ---
+    const storiesStr = surveyData?.stories || "1 Story";
+    const isTwoStory = storiesStr.includes("2");
+    
+    const visualLayoutInstruction = isTwoStory 
+      ? "On the right half: EXACTLY TWO detailed architectural floor plans (First Floor and Second Floor) stacked vertically."
+      : "On the right half: EXACTLY ONE detailed architectural floor plan.";
+
+    // 1. Intelligence Prompt - CREATIVE LICENSE + STRICT ENFORCEMENT
     let baseInstruction = `
-Act as a Senior Architectural Project Manager.
-You must output a strictly formatted JSON object containing two parts: an image generation prompt and a feasibility brief.
+Act as a Master Architect and Expert AI Prompt Engineer.
+You must output a strictly formatted JSON object.
 
-INPUT DATA:
-${refinementInput ? `REFINEMENT REQUEST: "${refinementInput}"` : `USER REQUIREMENTS: ${JSON.stringify(surveyData)}`}
+USER'S EXPLICIT REQUIREMENTS:
+- Location: ${surveyData?.location || "Unspecified"}
+- Area: ${surveyData?.totalArea || "Unspecified"} sq ft
+- Layout: ${surveyData?.stories || "1 Story"}, ${surveyData?.bedrooms || "3 Beds"}, ${surveyData?.bathrooms || "2 Baths"}
+- Materials/Style: ${surveyData?.materials || "Modern"}
+- Specific Features: ${surveyData?.features || "None specified"}
+${refinementInput ? `\nUSER REFINEMENT (MUST APPLY): "${refinementInput}"` : ""}
 
-INSTRUCTIONS:
-1. Analyze the location, size (${surveyData?.totalArea} sqft), and materials.
-2. ${pricingInstruction}
-3. Estimate a construction timeline.
-4. List 3 key material recommendations.
-5. Create the image prompt for a side-by-side 3D Render (Left) and Floor Plan (Right).
+CORE DIRECTIVES:
+1. ABSOLUTE TRUTH: The user's explicit requirements are non-negotiable constraints. You MUST include their specific features, room counts, materials, and location context.
+2. FILL IN THE GAPS: Users often provide very short descriptions. As the Master Architect, it is YOUR job to flesh out the design. Invent beautiful, cohesive architectural details, landscaping, lighting, facade textures, and layout configurations that perfectly complement the user's brief. Make the resulting image prompt highly detailed, professional, and photorealistic.
+
+INSTRUCTIONS FOR THE IMAGE PROMPT:
+Write a highly descriptive prompt for an AI image generator to create a single, wide presentation board.
+1. The image MUST be split down the middle.
+2. On the left half: A photorealistic, highly detailed 3D exterior render. Showcase the user's exact materials/location, plus the rich, cohesive details you invented to fill in the gaps.
+3. ${visualLayoutInstruction} The floor plan(s) MUST be top-down blueprints with clean black lines on a white background, clearly showing rooms that match the requested Beds/Baths and accommodating any user-requested features.
+
+INSTRUCTIONS FOR FEASIBILITY BRIEF:
+1. ${pricingInstruction}
+2. Estimate construction timeline.
+3. List 3 key material recommendations based on the design.
 
 OUTPUT FORMAT (JSON ONLY - NO MARKDOWN):
 {
-  "imagePrompt": "The detailed image generation prompt text...",
+  "imagePrompt": "A single wide architectural presentation board. On the left half: a photorealistic 3D exterior render of a [materials] house in [location]. [Add highly detailed descriptions of the architecture, lighting, and landscaping you designed to fill the gaps, ensuring user features are included]. ${visualLayoutInstruction} The floor plans show [rooms/beds/baths]. Clean architectural style.",
   "brief": {
     "costRange": "$X - $Y", 
     "timeline": "X - Y Months",
-    "materials": ["Material 1", "Material 2", "Material 3"],
-    "notes": "Short feasibility note."
+    "materials": ["Material 1", "Material 2", "Material 3"]
   }
 }
 `.trim();
 
-    // 2. Generate Text (Restored your original model name)
+    // 2. Generate Text 
     const textResp = await ai.models.generateContent({
       model: "gemini-3-flash-preview", 
       contents: baseInstruction,
@@ -94,12 +110,12 @@ OUTPUT FORMAT (JSON ONLY - NO MARKDOWN):
     } catch (e) {
         console.error("JSON Parse Error:", e);
         parsedData = { 
-            imagePrompt: `Architectural house in ${surveyData?.location || "modern style"}, side by side 3D render and floor plan.`,
+            imagePrompt: `A single wide architectural presentation board. On the left half: a photorealistic 3D exterior render of a ${surveyData?.materials} house in ${surveyData?.location}. Features include ${surveyData?.features}. ${visualLayoutInstruction} The floor plans show ${surveyData?.bedrooms} and ${surveyData?.bathrooms}.`,
             brief: null 
         };
     }
 
-    // 3. Generate Image (Restored your original model name)
+    // 3. Generate Image
     const imgResp = await ai.models.generateContent({
       model: "gemini-3-pro-image-preview",
       contents: parsedData.imagePrompt,
