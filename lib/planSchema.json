@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PlanSpec",
+  "type": "object",
+  "required": ["stories", "levels"],
+  "properties": {
+    "stories": { "type": "integer", "enum": [1, 2] },
+    "totalAreaSqFt": { "type": "number" },
+    "levels": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["level", "width", "height", "rooms"],
+        "properties": {
+          "level": { "type": "integer", "enum": [1, 2] },
+          "width": { "type": "number", "minimum": 20, "maximum": 120 },
+          "height": { "type": "number", "minimum": 20, "maximum": 120 },
+          "rooms": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "object",
+              "required": ["id", "type", "level", "x", "y", "w", "h", "label"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "living", "kitchen", "dining",
+                    "bedroom", "bathroom",
+                    "laundry", "garage", "office",
+                    "entry", "hall", "stairs",
+                    "closet", "pantry", "storage"
+                  ]
+                },
+                "level": { "type": "integer", "enum": [1, 2] },
+                "x": { "type": "number", "minimum": 0 },
+                "y": { "type": "number", "minimum": 0 },
+                "w": { "type": "number", "minimum": 4, "maximum": 60 },
+                "h": { "type": "number", "minimum": 4, "maximum": 60 },
+                "label": { "type": "string", "minLength": 1 }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
