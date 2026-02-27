@@ -354,26 +354,52 @@
     };
 
     const runGeneration = async (payload, type) => {
-        try {
-            const response = await fetch('/api/generate', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-            const data = await response.json();
-            if (!data.success) throw new Error(data.message);
-            if (data.image) {
-                const watermarkedHigh = await processImage(data.image, 'high');
-                const watermarkedLow = await processImage(data.image, 'low');
-                const finalResult = { 
-                    ...data, 
-                    watermarkedImage: watermarkedHigh, 
-                    previewImage: watermarkedLow,
-                    refinementCount: type === 'New' ? 0 : (result?.refinementCount || 0) + 1 
-                };
-                setResult(finalResult);
-                saveToHistory(finalResult, type);
-            }
-            setStatus('success');
-            setIsRefining(false); setShowRefineInput(false); setRefinementText('');
-        } catch (e) { console.error(e); setStatus('error'); setIsRefining(false); }
+  try {
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json();
+    if (!data.success) throw new Error(data.message);
+
+    // data.planImage = floor plan png base64
+    // data.image = 3D render base64
+
+    const planWatermarkedHigh = data.planImage ? await processImage(data.planImage, 'high') : null;
+    const planWatermarkedLow  = data.planImage ? await processImage(data.planImage, 'low') : null;
+
+    const renderWatermarkedHigh = data.image ? await processImage(data.image, 'high') : null;
+    const renderWatermarkedLow  = data.image ? await processImage(data.image, 'low') : null;
+
+    const finalResult = {
+      ...data,
+
+      // keep your old fields for compatibility (render is the “main”)
+      watermarkedImage: renderWatermarkedHigh,
+      previewImage: renderWatermarkedLow,
+
+      // new fields for plan
+      planWatermarkedImage: planWatermarkedHigh,
+      planPreviewImage: planWatermarkedLow,
+
+      refinementCount: type === 'New' ? 0 : (result?.refinementCount || 0) + 1
     };
+
+    setResult(finalResult);
+    saveToHistory(finalResult, type);
+
+    setStatus('success');
+    setIsRefining(false);
+    setShowRefineInput(false);
+    setRefinementText('');
+
+  } catch (e) {
+    console.error(e);
+    setStatus('error');
+    setIsRefining(false);
+  }
+};
 
     const handleGenSubmit = (e) => { e.preventDefault(); setStatus('loading'); setResult(null); runGeneration({ surveyData: formData, passkey: passkeyInput }, 'New'); };
     const handleRefinementSubmit = (e) => { e.preventDefault(); setIsRefining(true); runGeneration({ surveyData: formData, passkey: passkeyInput, refinementInput: refinementText }, 'Refined'); };
@@ -799,6 +825,7 @@
     </script>
 </body>
 </html>
+
 
 
 
