@@ -474,12 +474,54 @@
                         </form>
                     </div>
 
-                    <div className="w-full lg:w-2/3 flex flex-col gap-6">
-                        <div className="w-full aspect-[4/3] md:aspect-[16/7] bg-white shadow-2xl flex items-center justify-center relative overflow-hidden border border-studio-slate/5">
-                            {(status === 'idle' && !result) && (<div className="text-center opacity-20"><div className="font-serif italic text-4xl mb-2">Awaiting Input</div><div className="text-[9px] uppercase tracking-widest">Neural Engine Standby</div></div>)}
-                            {(status === 'loading' || isRefining) && (<div className="text-center z-10 bg-white/80 p-6 rounded-xl backdrop-blur-sm"><motion.div className="w-16 h-16 border-4 border-studio-blueprint border-t-transparent rounded-full mx-auto mb-4" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} /><p className="text-[9px] uppercase tracking-widest animate-pulse">{isRefining ? 'Refining Architecture...' : 'Drafting Layout & Renders...'}</p></div>)}
-                            {result && result.watermarkedImage && (<motion.img initial={{ opacity: 0 }} animate={{ opacity: (isRefining ? 0.5 : 1) }} src={result.watermarkedImage} className="w-full h-full object-cover absolute inset-0" alt="Generated Concept" />)}
-                        </div>
+                    <div className="w-full bg-white shadow-2xl relative overflow-hidden border border-studio-slate/5">
+  {(status === 'idle' && !result) && (
+    <div className="text-center opacity-20 py-20">
+      <div className="font-serif italic text-4xl mb-2">Awaiting Input</div>
+      <div className="text-[9px] uppercase tracking-widest">Neural Engine Standby</div>
+    </div>
+  )}
+
+  {(status === 'loading' || isRefining) && (
+    <div className="text-center z-10 bg-white/80 p-6 rounded-xl backdrop-blur-sm py-20">
+      <motion.div className="w-16 h-16 border-4 border-studio-blueprint border-t-transparent rounded-full mx-auto mb-4"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+      />
+      <p className="text-[9px] uppercase tracking-widest animate-pulse">
+        {isRefining ? 'Refining Architecture...' : 'Generating 2D Plan → 3D Render...'}
+      </p>
+    </div>
+  )}
+
+  {result && (result.planWatermarkedImage || result.watermarkedImage) && (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+      {/* 2D PLAN */}
+      <div className="relative border-b md:border-b-0 md:border-r border-studio-slate/10">
+        <div className="absolute top-3 left-3 z-10 bg-white/90 px-2 py-1 text-[9px] uppercase tracking-widest font-bold border border-studio-slate/10">
+          2D Plan
+        </div>
+        {result.planWatermarkedImage ? (
+          <img src={result.planWatermarkedImage} className="w-full h-[380px] md:h-[420px] object-contain bg-white" alt="2D Plan" />
+        ) : (
+          <div className="h-[380px] md:h-[420px] flex items-center justify-center opacity-40">No plan</div>
+        )}
+      </div>
+
+      {/* 3D RENDER */}
+      <div className="relative">
+        <div className="absolute top-3 left-3 z-10 bg-white/90 px-2 py-1 text-[9px] uppercase tracking-widest font-bold border border-studio-slate/10">
+          3D Render
+        </div>
+        {result.watermarkedImage ? (
+          <img src={result.watermarkedImage} className="w-full h-[380px] md:h-[420px] object-cover bg-white" alt="3D Render" />
+        ) : (
+          <div className="h-[380px] md:h-[420px] flex items-center justify-center opacity-40">No render</div>
+        )}
+      </div>
+    </div>
+  )}
+</div>
 
                         {/* ESTIMATE CARD - Shows only if data returned from API */}
                         {result && result.brief && result.brief.costRange && (
@@ -749,4 +791,5 @@
     </script>
 </body>
 </html>
+
 
