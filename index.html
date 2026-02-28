@@ -5,7 +5,7 @@
     <!-- Mobile App-Like Viewport Settings -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
     <title>Keystone AI | Architectural Discovery Studio</title>
-    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -297,42 +297,49 @@ const { motion, useScroll, useTransform, AnimatePresence } = FM;
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("keystone_history");
-    if (saved) {
-      try {
-        setHistory(JSON.parse(saved));
-      } catch (e) {
-        // ignore
-      }
-    }
-  }, []);
+  try {
+    const saved = localStorage.getItem('keystone_history');
+    if (saved) setHistory(JSON.parse(saved));
+  } catch (e) {
+    console.warn("History load failed; clearing keystone_history", e);
+    try { localStorage.removeItem('keystone_history'); } catch {}
+  }
+}, []);
 
-  const saveToHistory = (newResult, type) => {
-    const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const safeSetHistory = (updated) => {
+  // Always keep in-memory history
+  setHistory(updated);
 
-    // Save BOTH plan + render, so clicking history won’t break your new UI.
-    const historyItem = {
-      id: Date.now(),
-      type,
-      timestamp,
-      prompt: newResult.prompt || "",
-      brief: newResult.brief || null,
+  // Try localStorage, but NEVER crash if blocked/quota exceeded
+  try {
+    localStorage.setItem('keystone_history', JSON.stringify(updated));
+  } catch (e) {
+    console.warn("localStorage blocked/quota exceeded; history will be session-only.", e);
+  }
+};
 
-      refinementCount: newResult.refinementCount || 0,
+const saveToHistory = (newResult, type) => {
+  const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' });
 
-      // Render images
-      watermarkedImage: newResult.watermarkedImage || null,
-      previewImage: newResult.previewImage || null,
+  // IMPORTANT: store ONLY small previews (not watermarkedImage / full base64)
+  const historyItem = {
+    id: Date.now(),
+    type,
+    timestamp,
 
-      // Plan images
-      planWatermarkedImage: newResult.planWatermarkedImage || null,
-      planPreviewImage: newResult.planPreviewImage || null
-    };
+    // tiny previews only
+    previewImage: newResult.previewImage || null,
+    planPreviewImage: newResult.planPreviewImage || null,
 
-    const updated = [historyItem, ...history].slice(0, 6);
-    setHistory(updated);
-    localStorage.setItem("keystone_history", JSON.stringify(updated));
+    // metadata only
+    brief: newResult.brief || null,
+    refinementCount: newResult.refinementCount || 0,
+    prompt: newResult.prompt || ""
   };
+
+  const updated = [historyItem, ...history].slice(0, 6);
+  safeSetHistory(updated);
+};
 
   const processImage = (base64Image, quality = "high") => {
     return new Promise((resolve) => {
@@ -1104,6 +1111,9 @@ const { motion, useScroll, useTransform, AnimatePresence } = FM;
     </script>
 </body>
 </html>
+
+
+
 
 
 
