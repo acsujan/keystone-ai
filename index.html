@@ -307,32 +307,40 @@ const { motion, useScroll, useTransform, AnimatePresence } = FM;
     }
   }, []);
 
-  const saveToHistory = (newResult, type) => {
-    const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const safeSetHistory = (updated) => {
+  // Always keep in-memory history
+  setHistory(updated);
 
-    // Save BOTH plan + render, so clicking history won’t break your new UI.
-    const historyItem = {
-      id: Date.now(),
-      type,
-      timestamp,
-      prompt: newResult.prompt || "",
-      brief: newResult.brief || null,
+  // Try localStorage, but NEVER crash if blocked/quota exceeded
+  try {
+    localStorage.setItem('keystone_history', JSON.stringify(updated));
+  } catch (e) {
+    console.warn("localStorage blocked/quota exceeded; history will be session-only.", e);
+  }
+};
 
-      refinementCount: newResult.refinementCount || 0,
+const saveToHistory = (newResult, type) => {
+  const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' });
 
-      // Render images
-      watermarkedImage: newResult.watermarkedImage || null,
-      previewImage: newResult.previewImage || null,
+  // IMPORTANT: store ONLY small previews (not watermarkedImage / full base64)
+  const historyItem = {
+    id: Date.now(),
+    type,
+    timestamp,
 
-      // Plan images
-      planWatermarkedImage: newResult.planWatermarkedImage || null,
-      planPreviewImage: newResult.planPreviewImage || null
-    };
+    // tiny previews only
+    previewImage: newResult.previewImage || null,
+    planPreviewImage: newResult.planPreviewImage || null,
 
-    const updated = [historyItem, ...history].slice(0, 6);
-    setHistory(updated);
-    localStorage.setItem("keystone_history", JSON.stringify(updated));
+    // metadata only
+    brief: newResult.brief || null,
+    refinementCount: newResult.refinementCount || 0,
+    prompt: newResult.prompt || ""
   };
+
+  const updated = [historyItem, ...history].slice(0, 6);
+  safeSetHistory(updated);
+};
 
   const processImage = (base64Image, quality = "high") => {
     return new Promise((resolve) => {
@@ -1104,6 +1112,7 @@ const { motion, useScroll, useTransform, AnimatePresence } = FM;
     </script>
 </body>
 </html>
+
 
 
 
