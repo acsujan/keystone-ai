@@ -1,5 +1,5 @@
 // api/generate.js (CommonJS)
-
+//aa
 module.exports.config = { runtime: "nodejs" };
 
 const planHandler = require("./plan");
@@ -132,4 +132,5 @@ module.exports = async function handler(req, res) {
     console.error("GENERATE error:", err);
     return res.status(500).json({ success: false, message: err?.message || "Server error" });
   }
+
 };
