@@ -6,7 +6,7 @@ export default function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
 
   const { passkey } = req.body || {};
-  
+  //aa
   // SECURE: We default to an empty string "" if the Env Var is missing.
   // This means if you forget to set it in Vercel, access is denied (Safe Fail).
   const basicString = process.env.VALID_PASSKEYS || "";
