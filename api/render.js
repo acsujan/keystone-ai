@@ -1,4 +1,15 @@
+// api/render.js (CommonJS)
+
+module.exports.config = { runtime: "nodejs" };
+
 const { GoogleGenAI } = require("@google/genai");
+
+function stripDataUrlPrefix(b64) {
+  if (!b64) return b64;
+  // If someone passes "data:image/png;base64,...."
+  const idx = b64.indexOf("base64,");
+  return idx >= 0 ? b64.slice(idx + "base64,".length) : b64;
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -10,9 +21,9 @@ module.exports = async function handler(req, res) {
 
   try {
     const apiKey = process.env.GOOGLE_API_KEY;
-    if (!apiKey) return res.status(500).json({ success: false, message: "Missing API Key" });
+    if (!apiKey) return res.status(500).json({ success: false, message: "Missing GOOGLE_API_KEY" });
 
-    const { surveyData, planImageBase64 } = req.body ?? {};
+    const { surveyData, planImageBase64 } = req.body || {};
     if (!planImageBase64) return res.status(400).json({ success: false, message: "Missing plan image" });
 
     const ai = new GoogleGenAI({ apiKey });
@@ -23,6 +34,7 @@ Create a photorealistic 3D exterior render of a residential home.
 The attached image is the ground-truth FLOOR PLAN footprint/layout.
 Hard rules:
 - Do not add extra wings/footprint beyond the plan.
+- Do not extend the building footprint beyond the plan outline.
 - Keep garage placement consistent if a garage exists.
 - The number of stories must match: ${surveyData?.stories || "1 Story"}.
 
@@ -42,7 +54,7 @@ Camera: eye-level 3/4 view, high detail, realistic lighting.
             { text: renderPrompt },
             {
               inlineData: {
-                data: planImageBase64,
+                data: stripDataUrlPrefix(planImageBase64),
                 mimeType: "image/png"
               }
             }
@@ -52,8 +64,9 @@ Camera: eye-level 3/4 view, high detail, realistic lighting.
     });
 
     let imageBase64 = null;
-    let mimeType = null;
-    const parts = imgResp?.candidates?.[0]?.content?.parts ?? [];
+    let mimeType = "image/png";
+
+    const parts = imgResp?.candidates?.[0]?.content?.parts || [];
     for (const part of parts) {
       if (part?.inlineData?.data) {
         imageBase64 = part.inlineData.data;
@@ -62,7 +75,16 @@ Camera: eye-level 3/4 view, high detail, realistic lighting.
       }
     }
 
-    if (!imageBase64) return res.status(500).json({ success: false, message: "No image returned." });
+    if (!imageBase64) {
+      return res.status(500).json({
+        success: false,
+        message: "No image returned.",
+        debug: {
+          hasCandidates: !!imgResp?.candidates?.length,
+          partsCount: parts.length
+        }
+      });
+    }
 
     return res.status(200).json({
       success: true,
